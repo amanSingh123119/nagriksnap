@@ -1,0 +1,2913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="NagrikSnap Citizen Dashboard – Complete unified workspace for reporting, tracking, and resolving civic issues." />
+  <title>Citizen Dashboard – NagrikSnap</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    /* ===== RESET & ROOT VARIABLES ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --ns-blue: #0ea5e9;
+      --ns-blue-hover: #0284c7;
+      --ns-navy: #0e2a47;
+      --ns-navy-dark: #091e33;
+      --ns-teal: #14b8a6;
+      --ns-green: #22c55e;
+      --ns-orange: #f97316;
+      --ns-red: #ef4444;
+      --ns-purple: #8b5cf6;
+      --ns-bg: #f5f8fc;
+      --ns-sidebar-bg: #ffffff;
+      --ns-card-bg: #ffffff;
+      --ns-border: #e2e8f0;
+      --ns-text-main: #1e293b;
+      --ns-text-muted: #64748b;
+      --ns-text-light: #94a3b8;
+      --ns-radius-lg: 16px;
+      --ns-radius-md: 12px;
+      --ns-radius-sm: 8px;
+      --ns-shadow-card: 0 4px 16px rgba(15, 23, 42, 0.04);
+      --ns-shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --ns-sidebar-width: 260px;
+      --ns-topbar-height: 70px;
+    }
+
+    body {
+      font-family: 'Nunito', system-ui, sans-serif;
+      background: var(--ns-bg);
+      color: var(--ns-text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+    }
+
+    /* ===== APP SHELL ===== */
+    .app-layout {
+      display: flex;
+      width: 100vw;
+      min-height: 100vh;
+    }
+
+    /* ===== LEFT SIDEBAR ===== */
+    .sidebar {
+      width: var(--ns-sidebar-width);
+      background: var(--ns-sidebar-bg);
+      border-right: 1px solid var(--ns-border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+      transition: transform 0.25s ease;
+    }
+
+    /* Brand Logo */
+    .sidebar-header {
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--ns-border);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .sidebar-logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.5px;
+      color: var(--ns-navy);
+      line-height: 1.2;
+    }
+    .brand-title span { color: var(--ns-blue); }
+
+    .brand-tagline {
+      font-size: 0.65rem;
+      color: var(--ns-text-muted);
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+
+    /* Navigation Menu */
+    .sidebar-menu {
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      color: var(--ns-text-muted);
+      border-radius: var(--ns-radius-md);
+      font-size: 0.88rem;
+      font-weight: 700;
+      transition: all 0.18s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+      user-select: none;
+      text-decoration: none;
+    }
+
+    .nav-item i {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+      transition: color 0.18s ease;
+    }
+
+    .nav-item:hover {
+      background: #f1f5f9;
+      color: var(--ns-navy);
+    }
+
+    .nav-item.active {
+      background: #e0f2fe;
+      color: var(--ns-blue-hover);
+      font-weight: 800;
+      border-color: #bae6fd;
+    }
+
+    .nav-item.active i {
+      color: var(--ns-blue);
+    }
+
+    .nav-item .badge-count {
+      margin-left: auto;
+      background: #ef4444;
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    /* Sidebar Promo Card */
+    .sidebar-promo-card {
+      margin: 14px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+      border: 1px solid #bae6fd;
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+    }
+
+    .promo-graphic {
+      width: 52px;
+      height: 52px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      color: #0ea5e9;
+      font-size: 1.4rem;
+    }
+
+    .promo-text {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #0369a1;
+      line-height: 1.35;
+    }
+
+    /* Mobile Overlay */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 99;
+    }
+
+    /* ===== MAIN CONTENT WRAPPER ===== */
+    .main-wrapper {
+      margin-left: var(--ns-sidebar-width);
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--ns-bg);
+    }
+
+    /* Top Navigation Bar */
+    .topbar {
+      height: var(--ns-topbar-height);
+      background: white;
+      border-bottom: 1px solid var(--ns-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .hamburger-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--ns-navy);
+      cursor: pointer;
+      padding: 6px;
+    }
+
+    /* Search Bar */
+    .topbar-search {
+      flex: 1;
+      max-width: 520px;
+      position: relative;
+    }
+
+    .topbar-search i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ns-text-light);
+      font-size: 0.95rem;
+    }
+
+    .topbar-search input {
+      width: 100%;
+      padding: 10px 16px 10px 44px;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      background: #f8fafc;
+      font-family: inherit;
+      font-size: 0.88rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .topbar-search input:focus {
+      background: white;
+      border-color: var(--ns-blue);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+    }
+
+    /* Topbar Right Controls */
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-notif-bell {
+      position: relative;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ns-text-muted);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      font-size: 1.05rem;
+    }
+
+    .btn-notif-bell:hover {
+      background: #f1f5f9;
+      color: var(--ns-navy);
+    }
+
+    .notif-dot {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: #ef4444;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+    }
+
+    /* Profile Pill */
+    .user-profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 5px 12px 5px 6px;
+      border-radius: 999px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      position: relative;
+    }
+
+    .user-profile-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .profile-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .profile-name {
+      font-weight: 700;
+      font-size: 0.86rem;
+      color: var(--ns-navy);
+      line-height: 1.2;
+    }
+
+    .profile-role {
+      font-size: 0.72rem;
+      color: var(--ns-text-muted);
+      font-weight: 600;
+    }
+
+    .user-profile-btn .fa-chevron-down {
+      font-size: 0.72rem;
+      color: var(--ns-text-light);
+      margin-left: 4px;
+    }
+
+    /* Profile Dropdown Menu */
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--ns-border);
+      box-shadow: var(--ns-shadow-lg);
+      width: 200px;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 150;
+    }
+
+    .profile-dropdown.show {
+      display: flex;
+    }
+
+    .dropdown-item {
+      padding: 10px 16px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--ns-text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .dropdown-item:hover {
+      background: #f8fafc;
+      color: var(--ns-blue);
+    }
+
+    .dropdown-item.logout {
+      color: #ef4444;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    /* ===== CONTENT PANELS (SPA CONTAINER) ===== */
+    .dashboard-viewport {
+      padding: 28px 32px 60px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    /* View Switcher */
+    .spa-view {
+      display: none;
+      animation: fadeIn 0.22s ease-in-out;
+    }
+    .spa-view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== VIEW 1: DASHBOARD OVERVIEW ===== */
+    .dashboard-body {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .welcome-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .welcome-text h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--ns-navy);
+      letter-spacing: -0.5px;
+    }
+
+    .welcome-text p {
+      color: var(--ns-text-muted);
+      font-size: 0.92rem;
+      margin-top: 2px;
+    }
+
+    .btn-report-header {
+      background: var(--ns-blue);
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+    }
+
+    .btn-report-header:hover {
+      background: var(--ns-blue-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(14, 165, 233, 0.45);
+    }
+
+    /* Stats Row of 4 */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: var(--ns-radius-lg);
+      padding: 18px 20px;
+      border: 1px solid var(--ns-border);
+      box-shadow: var(--ns-shadow-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      border-color: #cbd5e1;
+    }
+
+    .stat-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-icon-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .stat-icon-circle.blue { background: #e0f2fe; color: #0284c7; }
+    .stat-icon-circle.green { background: #dcfce7; color: #16a34a; }
+    .stat-icon-circle.orange { background: #ffedd5; color: #ea580c; }
+    .stat-icon-circle.red { background: #fee2e2; color: #dc2626; }
+
+    .stat-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-number {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.65rem;
+      font-weight: 800;
+      line-height: 1.1;
+      color: var(--ns-navy);
+    }
+
+    .stat-label {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--ns-text-muted);
+    }
+
+    .stat-arrow {
+      color: var(--ns-text-light);
+      font-size: 0.9rem;
+      transition: transform 0.2s ease;
+    }
+
+    .stat-card:hover .stat-arrow {
+      transform: translateX(3px);
+      color: var(--ns-blue);
+    }
+
+    /* Middle Row (65% / 35%) */
+    .middle-grid {
+      display: grid;
+      grid-template-columns: 1.8fr 1fr;
+      gap: 20px;
+    }
+
+    .dash-panel {
+      background: white;
+      border-radius: var(--ns-radius-lg);
+      border: 1px solid var(--ns-border);
+      box-shadow: var(--ns-shadow-card);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .panel-header h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--ns-navy);
+    }
+
+    .panel-header a, .panel-header button.link-btn {
+      color: var(--ns-blue);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.15s ease;
+    }
+
+    .panel-header a:hover, .panel-header button.link-btn:hover {
+      color: var(--ns-blue-hover);
+      text-decoration: underline;
+    }
+
+    /* Issues Table */
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--ns-radius-md);
+      border: 1px solid #f1f5f9;
+    }
+
+    .recent-issues-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.84rem;
+    }
+
+    .recent-issues-table th {
+      background: #f8fafc;
+      color: var(--ns-text-muted);
+      font-weight: 700;
+      padding: 12px 14px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--ns-border);
+    }
+
+    .recent-issues-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--ns-text-main);
+      font-weight: 600;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+
+    .recent-issues-table tr:hover td {
+      background: #f0f9ff;
+    }
+
+    .issue-title-cell {
+      font-weight: 700;
+      color: var(--ns-navy);
+      max-width: 220px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Status Pills */
+    .status-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .status-pill.in-progress { background: #e0f2fe; color: #0369a1; }
+    .status-pill.pending { background: #ffedd5; color: #c2410c; }
+    .status-pill.resolved { background: #dcfce7; color: #15803d; }
+    .status-pill.under-review { background: #ede9fe; color: #6d28d9; }
+
+    /* Right Column Analytics */
+    .right-analytics-col {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .donut-layout {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      justify-content: center;
+      padding: 8px 0;
+    }
+
+    .donut-chart-box {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      flex-shrink: 0;
+    }
+
+    .donut-chart-box svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+
+    .donut-center-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .donut-center-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--ns-navy);
+      line-height: 1;
+    }
+
+    .donut-center-lbl {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--ns-text-muted);
+    }
+
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--ns-text-main);
+    }
+
+    .legend-bullet {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-bullet.blue { background: #0ea5e9; }
+    .legend-bullet.green { background: #22c55e; }
+    .legend-bullet.orange { background: #f97316; }
+
+    /* Category Progress Bars */
+    .category-bars-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .cat-bar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .cat-bar-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ns-text-main);
+      width: 105px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cat-track {
+      flex: 1;
+      height: 7px;
+      background: #f1f5f9;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .cat-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+
+    .cat-bar-count {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--ns-text-muted);
+      width: 14px;
+      text-align: right;
+    }
+
+    /* Bottom 3 Columns */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      height: 100%;
+    }
+
+    .qa-card-btn {
+      background: #f8fafc;
+      border: 1px solid var(--ns-border);
+      border-radius: var(--ns-radius-md);
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--ns-text-main);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .qa-card-btn:hover {
+      background: white;
+      border-color: var(--ns-blue);
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .qa-icon-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      margin-bottom: 2px;
+    }
+
+    .qa-icon-circle.blue { background: #e0f2fe; color: #0284c7; }
+    .qa-icon-circle.purple { background: #f3e8ff; color: #9333ea; }
+    .qa-icon-circle.cyan { background: #cffafe; color: #0891b2; }
+    .qa-icon-circle.indigo { background: #e0e7ff; color: #4f46e5; }
+
+    .qa-card-btn strong {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--ns-navy);
+      line-height: 1.2;
+    }
+
+    .qa-card-btn small {
+      font-size: 0.7rem;
+      color: var(--ns-text-muted);
+      line-height: 1.2;
+    }
+
+    .map-wrapper {
+      height: 200px;
+      border-radius: var(--ns-radius-md);
+      overflow: hidden;
+      border: 1px solid var(--ns-border);
+      position: relative;
+    }
+
+    #miniMap, #fullMap {
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+    }
+
+    .notifications-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .notif-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+    }
+
+    .notif-row:hover {
+      background: #fafcfe;
+    }
+
+    .notif-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .notif-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .notif-circle.green { background: #dcfce7; color: #16a34a; }
+    .notif-circle.blue { background: #e0f2fe; color: #0284c7; }
+    .notif-circle.orange { background: #ffedd5; color: #ea580c; }
+    .notif-circle.purple { background: #f3e8ff; color: #9333ea; }
+
+    .notif-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .notif-content p {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--ns-text-main);
+      line-height: 1.35;
+    }
+
+    .notif-content small {
+      font-size: 0.7rem;
+      color: var(--ns-text-light);
+      font-weight: 500;
+    }
+
+    /* ===== VIEW 2: EMBEDDED REPORT NEW ISSUE ===== */
+    .report-card-container {
+      background: white;
+      border-radius: var(--ns-radius-lg);
+      border: 1px solid var(--ns-border);
+      box-shadow: var(--ns-shadow-card);
+      padding: 32px;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .report-header-banner {
+      background: linear-gradient(135deg, #0c2a49 0%, #1769b7 100%);
+      color: white;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .report-header-banner h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .report-header-banner p {
+      font-size: 0.85rem;
+      color: #e0f2fe;
+    }
+
+    .form-section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--ns-navy);
+      margin: 20px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .upload-dropzone {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .upload-dropzone:hover {
+      border-color: var(--ns-blue);
+      background: #f0f9ff;
+    }
+
+    .upload-dropzone i {
+      font-size: 2.4rem;
+      color: var(--ns-blue);
+      margin-bottom: 10px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-top: 4px;
+    }
+
+    .input-field:focus {
+      border-color: var(--ns-blue);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+    }
+
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ===== VIEW 3: FULL MY ISSUES VIEW ===== */
+    .filter-chips-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: white;
+      border: 1px solid var(--ns-border);
+      color: var(--ns-text-muted);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+
+    .filter-chip:hover {
+      border-color: #cbd5e1;
+      color: var(--ns-navy);
+    }
+
+    .filter-chip.active {
+      background: var(--ns-blue);
+      color: white;
+      border-color: var(--ns-blue);
+      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.25);
+    }
+
+    /* ===== ISSUE DETAIL MODAL (TIMELINE & TRACKER) ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: var(--ns-radius-lg);
+      max-width: 600px;
+      width: 100%;
+      padding: 26px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ns-text-muted);
+      font-size: 0.9rem;
+      z-index: 10;
+    }
+
+    /* 4-Stage Resolution Timeline */
+    .resolution-timeline {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 24px 0 20px;
+      padding: 0 10px;
+    }
+
+    .timeline-progress-bar {
+      position: absolute;
+      top: 16px;
+      left: 30px;
+      right: 30px;
+      height: 4px;
+      background: #e2e8f0;
+      z-index: 1;
+    }
+
+    .timeline-progress-fill {
+      height: 100%;
+      background: var(--ns-green);
+      width: 33%;
+      transition: width 0.4s ease;
+    }
+
+    .timeline-step {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 75px;
+      text-align: center;
+    }
+
+    .step-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      font-weight: 700;
+    }
+
+    .timeline-step.completed .step-circle {
+      background: var(--ns-green);
+      border-color: var(--ns-green);
+      color: white;
+    }
+
+    .timeline-step.active .step-circle {
+      border-color: var(--ns-blue);
+      color: var(--ns-blue);
+      box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2);
+    }
+
+    .step-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--ns-text-muted);
+      line-height: 1.2;
+    }
+
+    .timeline-step.active .step-name {
+      color: var(--ns-navy);
+      font-weight: 800;
+    }
+
+    /* Issue Info Box */
+    .issue-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 14px;
+      font-size: 0.84rem;
+    }
+
+    .issue-info-item strong {
+      display: block;
+      color: var(--ns-navy);
+      font-size: 0.78rem;
+    }
+
+    .issue-info-item span {
+      color: var(--ns-text-muted);
+      font-weight: 600;
+    }
+
+    /* Profile & Settings Tabs */
+    .profile-tabs {
+      display: flex;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+    .profile-tab-btn {
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--ns-text-muted);
+      border: none;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .profile-tab-btn.active {
+      color: var(--ns-blue);
+      border-bottom-color: var(--ns-blue);
+    }
+    .profile-section-panel {
+      display: none;
+    }
+    .profile-section-panel.active {
+      display: block;
+    }
+
+    .form-group-modal {
+      margin-bottom: 12px;
+    }
+    .form-group-modal label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ns-navy);
+      margin-bottom: 3px;
+    }
+    .form-group-modal input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--ns-radius-sm);
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+      gap: 12px;
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-info strong { display: block; font-size: 0.84rem; color: var(--ns-navy); }
+    .toggle-info small { display: block; font-size: 0.74rem; color: var(--ns-text-muted); }
+    
+    .switch-ui {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .switch-ui input { opacity: 0; width: 0; height: 0; }
+    .slider-ui {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider-ui:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .switch-ui input:checked + .slider-ui { background-color: var(--ns-blue); }
+    .switch-ui input:checked + .slider-ui:before { transform: translateX(20px); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1100px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .middle-grid { grid-template-columns: 1fr; }
+      .bottom-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .sidebar-overlay.open {
+        display: block;
+      }
+      .main-wrapper {
+        margin-left: 0;
+      }
+      .topbar {
+        padding: 0 16px;
+      }
+      .hamburger-btn {
+        display: block;
+      }
+      .dashboard-viewport {
+        padding: 18px 16px 40px;
+      }
+      .stats-row { grid-template-columns: 1fr; }
+      .grid-2col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Route Guard -->
+  <script>
+    try {
+      const s = JSON.parse(localStorage.getItem('nagriksnap_user') || 'null');
+      if (!s || s.role !== 'citizen' || !s.token) {
+        location.replace('login.html?role=citizen');
+      }
+    } catch (_) {
+      location.replace('login.html?role=citizen');
+    }
+  </script>
+
+  <!-- Mobile Backdrop Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarMobile()"></div>
+
+  <div class="app-layout">
+    
+    <!-- ===== 1. LEFT SIDEBAR ===== -->
+    <aside class="sidebar" id="appSidebar">
+      <!-- Brand Logo -->
+      <div class="sidebar-header" onclick="switchDashboardView('dashboard')">
+        <div class="sidebar-logo-icon">
+          <i class="fas fa-camera-retro"></i>
+        </div>
+        <div class="sidebar-brand-text">
+          <div class="brand-title">Nagrik<span>Snap</span></div>
+          <div class="brand-tagline">People • Problems • Progress</div>
+        </div>
+      </div>
+
+      <!-- 10 Navigation Items with Internal Single-Page Routing -->
+      <nav class="sidebar-menu">
+        <a class="nav-item active" id="nav-dashboard" onclick="switchDashboardView('dashboard')" title="Dashboard">
+          <i class="fas fa-th-large"></i>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" id="nav-report" onclick="switchDashboardView('report')" title="Report New Issue">
+          <i class="fas fa-plus-circle" style="color:var(--ns-blue);"></i>
+          <span>Report New Issue</span>
+        </a>
+        <a class="nav-item" id="nav-issues" onclick="switchDashboardView('issues')" title="My Issues">
+          <i class="fas fa-file-lines"></i>
+          <span>My Issues</span>
+        </a>
+        <a class="nav-item" id="nav-notifications" onclick="switchDashboardView('notifications')" title="Notifications">
+          <i class="fas fa-bell"></i>
+          <span>Notifications</span>
+          <span class="badge-count" id="sidebarBadgeCount">3</span>
+        </a>
+        <a class="nav-item" id="nav-community" onclick="switchDashboardView('community')" title="Community / Discussions">
+          <i class="fas fa-users"></i>
+          <span>Community / Discussions</span>
+        </a>
+        <a class="nav-item" id="nav-nearby" onclick="switchDashboardView('nearby')" title="Nearby Issues">
+          <i class="fas fa-map-location-dot"></i>
+          <span>Nearby Issues</span>
+        </a>
+        <a class="nav-item" id="nav-guidelines" onclick="switchDashboardView('guidelines')" title="Awareness & Guidelines">
+          <i class="fas fa-book-open"></i>
+          <span>Awareness & Guidelines</span>
+        </a>
+        <a class="nav-item" id="nav-feedback" onclick="switchDashboardView('feedback')" title="Feedback">
+          <i class="fas fa-comment-dots"></i>
+          <span>Feedback</span>
+        </a>
+        <a class="nav-item" id="nav-profile" onclick="switchDashboardView('profile')" title="My Profile">
+          <i class="fas fa-user-circle"></i>
+          <span>My Profile</span>
+        </a>
+        <a class="nav-item" id="nav-help" onclick="switchDashboardView('help')" title="Help & Support">
+          <i class="fas fa-circle-question"></i>
+          <span>Help & Support</span>
+        </a>
+      </nav>
+
+      <!-- Bottom Promo Card -->
+      <div class="sidebar-promo-card">
+        <div class="promo-graphic">
+          <i class="fas fa-hand-holding-heart"></i>
+        </div>
+        <div class="promo-text">
+          Together for a Stronger, Smarter and More Inclusive Society
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== 2. MAIN WRAPPER ===== -->
+    <main class="main-wrapper">
+      
+      <!-- Top Navigation Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger-btn" onclick="toggleSidebarMobile()" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+          </button>
+          
+          <!-- Live Global Search -->
+          <div class="topbar-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="globalSearchInput" placeholder="Search issues, status, or location..." oninput="handleGlobalSearch(this.value)" />
+          </div>
+        </div>
+
+        <!-- Right Controls -->
+        <div class="topbar-actions">
+          <!-- Notification Bell -->
+          <div class="btn-notif-bell" onclick="switchDashboardView('notifications')" title="Notifications">
+            <i class="far fa-bell"></i>
+            <span class="notif-dot" id="bellNotifDot">3</span>
+          </div>
+
+          <!-- Profile Pill with Dropdown -->
+          <div class="user-profile-btn" id="userProfileBtn" onclick="toggleProfileDropdown()">
+            <div class="profile-avatar" id="headerAvatar">AS</div>
+            <div class="profile-info">
+              <span class="profile-name" id="headerUserName">Aman Singh</span>
+              <span class="profile-role">Citizen</span>
+            </div>
+            <i class="fas fa-chevron-down"></i>
+
+            <!-- Dropdown -->
+            <div class="profile-dropdown" id="profileDropdown">
+              <div class="dropdown-item" onclick="switchDashboardView('profile')">
+                <i class="fas fa-user"></i> My Profile
+              </div>
+              <div class="dropdown-item" onclick="switchDashboardView('report')">
+                <i class="fas fa-plus"></i> New Complaint
+              </div>
+              <div class="dropdown-item logout" onclick="citizenLogout()">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ===== SINGLE PAGE APPLICATION VIEWPORT ===== -->
+      <div class="dashboard-viewport">
+
+        <!-- ========================================== -->
+        <!-- VIEW 1: DASHBOARD OVERVIEW                 -->
+        <!-- ========================================== -->
+        <section class="spa-view active" id="view-dashboard">
+          <div class="dashboard-body">
+
+            <!-- Welcome Header -->
+            <div class="welcome-header">
+              <div class="welcome-text">
+                <h1 id="welcomeTitle">Welcome, Aman Singh 👋</h1>
+                <p>Together, we can build better communities. Report issues, track progress and be the change.</p>
+              </div>
+              <button type="button" class="btn-report-header" onclick="switchDashboardView('report')">
+                <i class="fas fa-plus"></i> Report New Issue
+              </button>
+            </div>
+
+            <!-- 4 Stat Summary Cards Row -->
+            <div class="stats-row">
+              <div class="stat-card" onclick="filterAndShowIssues('all')">
+                <div class="stat-left">
+                  <div class="stat-icon-circle blue"><i class="fas fa-file-lines"></i></div>
+                  <div class="stat-details">
+                    <span class="stat-number" id="statTotal">5</span>
+                    <span class="stat-label">Total Issues</span>
+                  </div>
+                </div>
+                <i class="fas fa-chevron-right stat-arrow"></i>
+              </div>
+
+              <div class="stat-card" onclick="filterAndShowIssues('In Progress')">
+                <div class="stat-left">
+                  <div class="stat-icon-circle green"><i class="fas fa-clock-rotate-left"></i></div>
+                  <div class="stat-details">
+                    <span class="stat-number" id="statInProgress">2</span>
+                    <span class="stat-label">In Progress</span>
+                  </div>
+                </div>
+                <i class="fas fa-chevron-right stat-arrow"></i>
+              </div>
+
+              <div class="stat-card" onclick="filterAndShowIssues('Resolved')">
+                <div class="stat-left">
+                  <div class="stat-icon-circle orange"><i class="fas fa-circle-check"></i></div>
+                  <div class="stat-details">
+                    <span class="stat-number" id="statResolved">2</span>
+                    <span class="stat-label">Resolved</span>
+                  </div>
+                </div>
+                <i class="fas fa-chevron-right stat-arrow"></i>
+              </div>
+
+              <div class="stat-card" onclick="filterAndShowIssues('Pending')">
+                <div class="stat-left">
+                  <div class="stat-icon-circle red"><i class="fas fa-circle-exclamation"></i></div>
+                  <div class="stat-details">
+                    <span class="stat-number" id="statPending">1</span>
+                    <span class="stat-label">Pending</span>
+                  </div>
+                </div>
+                <i class="fas fa-chevron-right stat-arrow"></i>
+              </div>
+            </div>
+
+            <!-- Middle Row: Recent Issues Table (65%) & Analytics (35%) -->
+            <div class="middle-grid">
+              
+              <!-- Recent Issues Table Panel -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>Recent Issues</h2>
+                  <button type="button" class="link-btn" onclick="switchDashboardView('issues')">View All <i class="fas fa-arrow-right"></i></button>
+                </div>
+                
+                <div class="table-container">
+                  <table class="recent-issues-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Issue Title</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody id="issuesTableBody">
+                      <!-- Populated by JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Right Column: Status Overview Donut & Category Bars -->
+              <div class="right-analytics-col">
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h2>Issue Status Overview</h2>
+                  </div>
+                  <div class="donut-layout">
+                    <div class="donut-chart-box">
+                      <svg id="donutSvg" viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="48" fill="none" stroke="#f1f5f9" stroke-width="14" />
+                      </svg>
+                      <div class="donut-center-text">
+                        <div class="donut-center-num" id="donutTotalCount">5</div>
+                        <div class="donut-center-lbl">Total</div>
+                      </div>
+                    </div>
+
+                    <div class="donut-legend">
+                      <div class="legend-item">
+                        <span class="legend-bullet blue"></span>
+                        <span>In Progress</span>
+                        <span id="legendProgressVal" style="color:var(--ns-text-muted);margin-left:auto;">2 (40%)</span>
+                      </div>
+                      <div class="legend-item">
+                        <span class="legend-bullet green"></span>
+                        <span>Resolved</span>
+                        <span id="legendResolvedVal" style="color:var(--ns-text-muted);margin-left:auto;">2 (40%)</span>
+                      </div>
+                      <div class="legend-item">
+                        <span class="legend-bullet orange"></span>
+                        <span>Pending</span>
+                        <span id="legendPendingVal" style="color:var(--ns-text-muted);margin-left:auto;">1 (20%)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h2>Issues by Category</h2>
+                  </div>
+                  <div class="category-bars-list" id="categoryBarsList">
+                    <!-- Populated by JavaScript -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Row (3 Columns) -->
+            <div class="bottom-grid">
+              
+              <!-- Quick Actions (2x2 Grid) -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>Quick Actions</h2>
+                </div>
+                <div class="quick-actions-grid">
+                  <div class="qa-card-btn" onclick="switchDashboardView('report')">
+                    <div class="qa-icon-circle blue"><i class="fas fa-plus"></i></div>
+                    <strong>Report New Issue</strong>
+                    <small>Submit a problem with photos and location</small>
+                  </div>
+                  <div class="qa-card-btn" onclick="switchDashboardView('nearby')">
+                    <div class="qa-icon-circle purple"><i class="fas fa-location-dot"></i></div>
+                    <strong>View Nearby Issues</strong>
+                    <small>Check issues around your area</small>
+                  </div>
+                  <div class="qa-card-btn" onclick="switchDashboardView('guidelines')">
+                    <div class="qa-icon-circle cyan"><i class="fas fa-book"></i></div>
+                    <strong>Guidelines</strong>
+                    <small>Learn how to report effectively</small>
+                  </div>
+                  <div class="qa-card-btn" onclick="switchDashboardView('community')">
+                    <div class="qa-icon-circle indigo"><i class="fas fa-users"></i></div>
+                    <strong>Community</strong>
+                    <small>Discuss and support local issues</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Issue Map Preview -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>Issue Map</h2>
+                  <button type="button" class="link-btn" onclick="switchDashboardView('nearby')">View on Map <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="map-wrapper">
+                  <div id="miniMap"></div>
+                </div>
+              </div>
+
+              <!-- Recent Notifications Feed -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>Recent Notifications</h2>
+                  <button type="button" class="link-btn" onclick="switchDashboardView('notifications')">View All <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="notifications-feed" id="notificationsFeed">
+                  <!-- Populated by JavaScript -->
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 2: EMBEDDED REPORT NEW ISSUE          -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-report">
+          <div class="report-card-container">
+            <div class="report-header-banner">
+              <h2><i class="fas fa-camera"></i> Report a Civic / Societal Issue</h2>
+              <p>Snap it, describe it, and submit directly to municipal authorities and university problem-solving teams.</p>
+            </div>
+
+            <form id="spaReportForm" onsubmit="submitNewIssueFromPanel(event)">
+              
+              <!-- Evidence Photo Upload -->
+              <div class="form-section-title"><i class="fas fa-image" style="color:var(--ns-blue);"></i> 1. Evidence Photo or Video</div>
+              <div class="upload-dropzone" onclick="document.getElementById('spaPhotoInput').click()">
+                <i class="fas fa-cloud-arrow-up"></i>
+                <h4 style="color:var(--ns-navy);font-size:1rem;margin-bottom:4px;">Click to upload or drag & drop photo</h4>
+                <p style="font-size:0.78rem;color:var(--ns-text-muted);">Supports JPG, PNG, WEBP (damaged roads, leakage, overflowing waste)</p>
+                <div id="uploadFileNamePreview" style="margin-top:8px;font-weight:700;color:var(--ns-blue);font-size:0.85rem;"></div>
+                <input type="file" id="spaPhotoInput" accept="image/*" style="display:none;" onchange="previewUploadFile(this)" />
+              </div>
+
+              <!-- Issue Title -->
+              <div class="form-section-title"><i class="fas fa-heading" style="color:var(--ns-blue);"></i> 2. Issue Title</div>
+              <input type="text" id="spaIssueTitle" class="input-field" placeholder="e.g. Broken Streetlights along Main Park Avenue" required />
+
+              <!-- Description -->
+              <div class="form-section-title"><i class="fas fa-align-left" style="color:var(--ns-blue);"></i> 3. Describe the Problem in Detail</div>
+              <textarea id="spaIssueDesc" rows="4" class="input-field" placeholder="Provide details: how long it has been broken, danger caused, landmark nearby..." required></textarea>
+
+              <div class="grid-2col">
+                <!-- Department / Category -->
+                <div>
+                  <div class="form-section-title"><i class="fas fa-building" style="color:var(--ns-blue);"></i> 4. Department / Category</div>
+                  <select id="spaIssueCategory" class="input-field" required>
+                    <option value="Roads & Footpaths">Public Works / Roads</option>
+                    <option value="Solid Waste">Sanitation / Waste Management</option>
+                    <option value="Water Distribution">Water Supply</option>
+                    <option value="Street Lighting">Electrical / Street Lights</option>
+                    <option value="Drainage">Drainage & Sewerage</option>
+                    <option value="General">Parks & Horticulture</option>
+                  </select>
+                </div>
+
+                <!-- Priority -->
+                <div>
+                  <div class="form-section-title"><i class="fas fa-triangle-exclamation" style="color:var(--ns-orange);"></i> 5. Urgency Priority</div>
+                  <select id="spaIssuePriority" class="input-field">
+                    <option value="High">High Urgency (Hazard)</option>
+                    <option value="Medium" selected>Medium (Standard Maintenance)</option>
+                    <option value="Critical">Critical (Immediate Danger)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Location & GPS -->
+              <div class="form-section-title"><i class="fas fa-map-pin" style="color:var(--ns-blue);"></i> 6. Location & GPS</div>
+              <div style="position:relative;">
+                <input type="text" id="spaIssueAddress" class="input-field" placeholder="Street, Ward, Landmark..." style="padding-right:110px;" required />
+                <button type="button" class="btn-report-header" onclick="getGPSLocation()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:6px 14px;font-size:0.78rem;">
+                  <i class="fas fa-crosshairs"></i> Use GPS
+                </button>
+              </div>
+              <input type="hidden" id="spaLat" value="28.6315" />
+              <input type="hidden" id="spaLng" value="77.2167" />
+              <p id="gpsStatusHint" style="font-size:0.75rem;color:var(--ns-text-muted);margin-top:4px;">Coordinates: 28.6315, 77.2167 (New Delhi Municipal Region)</p>
+
+              <!-- Submit Button -->
+              <div style="display:flex;gap:12px;margin-top:28px;">
+                <button type="button" class="btn-report-header" style="background:#f1f5f9;color:var(--ns-text-main);box-shadow:none;" onclick="switchDashboardView('dashboard')">
+                  Cancel
+                </button>
+                <button type="submit" class="btn-report-header" id="btnSubmitIssue" style="flex:1;justify-content:center;font-size:1rem;padding:12px;">
+                  <i class="fas fa-paper-plane"></i> Submit Grievance
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 3: FULL MY ISSUES VIEW                -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-issues">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <div>
+                <h2>My Reported Issues</h2>
+                <p style="font-size:0.84rem;color:var(--ns-text-muted);margin-top:2px;">Track live status, department responses, and resolution progress.</p>
+              </div>
+              <button type="button" class="btn-report-header" onclick="switchDashboardView('report')">
+                <i class="fas fa-plus"></i> New Report
+              </button>
+            </div>
+
+            <!-- Filter Chips -->
+            <div class="filter-chips-row">
+              <button type="button" class="filter-chip active" id="chip-all" onclick="filterByStatusChip('all')">All Issues (<span id="chipCountAll">5</span>)</button>
+              <button type="button" class="filter-chip" id="chip-progress" onclick="filterByStatusChip('In Progress')">In Progress (<span id="chipCountProg">2</span>)</button>
+              <button type="button" class="filter-chip" id="chip-resolved" onclick="filterByStatusChip('Resolved')">Resolved (<span id="chipCountRes">2</span>)</button>
+              <button type="button" class="filter-chip" id="chip-pending" onclick="filterByStatusChip('Pending')">Pending (<span id="chipCountPend">1</span>)</button>
+            </div>
+
+            <!-- Full Issues Table -->
+            <div class="table-container">
+              <table class="recent-issues-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Issue Title</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="fullIssuesTableBody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 4: NOTIFICATIONS CENTER               -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-notifications">
+          <div class="dash-panel" style="max-width:850px;margin:0 auto;">
+            <div class="panel-header">
+              <div>
+                <h2>Notifications Center</h2>
+                <p style="font-size:0.84rem;color:var(--ns-text-muted);">Real-time status updates and department action alerts.</p>
+              </div>
+              <button type="button" class="btn-report-header" style="background:#f1f5f9;color:var(--ns-navy);box-shadow:none;" onclick="markAllNotificationsRead()">
+                <i class="fas fa-check-double"></i> Mark All as Read
+              </button>
+            </div>
+
+            <div class="notifications-feed" id="fullNotificationsFeed" style="gap:16px;">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 5: COMMUNITY / DISCUSSIONS            -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-community">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Community Civic Challenges</h2>
+                <p style="font-size:0.84rem;color:var(--ns-text-muted);">Collaborate with fellow citizens, endorse critical issues, and track community solutions.</p>
+              </div>
+              <button type="button" class="btn-report-header" onclick="switchDashboardView('report')">
+                <i class="fas fa-bullhorn"></i> Raise Community Issue
+              </button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:18px;" id="communityChallengeCards">
+              <!-- Challenge 1 -->
+              <div style="background:#f8fafc;border:1px solid var(--ns-border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-size:0.75rem;background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:999px;font-weight:700;">Road Infrastructure</span>
+                  <small style="color:var(--ns-text-muted);">Sector 4 Culvert</small>
+                </div>
+                <h4 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.05rem;">Flash Flood Risk & Drainage Choke in Low-Lying Streets</h4>
+                <p style="font-size:0.82rem;color:var(--ns-text-muted);line-height:1.4;">Severe waterlogging during peak monsoon rains blocking emergency ambulances and commuter access.</p>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px;border-top:1px solid #e2e8f0;">
+                  <button type="button" class="btn-report-header" style="padding:6px 14px;font-size:0.78rem;" onclick="this.innerHTML='<i class=\'fas fa-thumbs-up\'></i> Endorsed (35)';alert('👍 Endorsed! Priority raised for municipal review.')">
+                    <i class="far fa-thumbs-up"></i> Endorse (34)
+                  </button>
+                  <span style="font-size:0.78rem;font-weight:700;color:var(--ns-blue);"><i class="fas fa-university"></i> Under Univ Review</span>
+                </div>
+              </div>
+
+              <!-- Challenge 2 -->
+              <div style="background:#f8fafc;border:1px solid var(--ns-border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-size:0.75rem;background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;">Clean Water</span>
+                  <small style="color:var(--ns-text-muted);">Civil Lines</small>
+                </div>
+                <h4 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.05rem;">Fluoride & Heavy Metal Detection in Deep Borewells</h4>
+                <p style="font-size:0.82rem;color:var(--ns-text-muted);line-height:1.4;">Community water test proposal to install IoT real-time turbidity and fluoride telemetry sensors.</p>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px;border-top:1px solid #e2e8f0;">
+                  <button type="button" class="btn-report-header" style="padding:6px 14px;font-size:0.78rem;" onclick="this.innerHTML='<i class=\'fas fa-thumbs-up\'></i> Endorsed (53)';alert('👍 Endorsed! Priority raised for municipal review.')">
+                    <i class="far fa-thumbs-up"></i> Endorse (52)
+                  </button>
+                  <span style="font-size:0.78rem;font-weight:700;color:#0284c7;"><i class="fas fa-hand-holding-dollar"></i> CSR Grant Pledged</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 6: NEARBY ISSUES (FULL MAP)           -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-nearby">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Nearby Civic Issues (Geo Map)</h2>
+                <p style="font-size:0.84rem;color:var(--ns-text-muted);">Explore live civic reports filed in your municipal sector.</p>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="btn-report-header" style="padding:6px 14px;font-size:0.8rem;background:#f1f5f9;color:var(--ns-navy);box-shadow:none;" onclick="centerFullMap()">
+                  <i class="fas fa-crosshairs"></i> Center My Area
+                </button>
+              </div>
+            </div>
+
+            <div style="height:550px;border-radius:14px;overflow:hidden;border:1px solid var(--ns-border);">
+              <div id="fullMap"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 7: AWARENESS & GUIDELINES             -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-guidelines">
+          <div class="dash-panel" style="max-width:850px;margin:0 auto;">
+            <div class="panel-header">
+              <h2>Awareness & Civic Reporting Guidelines</h2>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:18px;line-height:1.6;font-size:0.9rem;color:var(--ns-text-main);">
+              <div style="background:#f8fafc;padding:18px;border-radius:12px;border-left:4px solid var(--ns-blue);">
+                <h4 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.05rem;margin-bottom:6px;">1. Clear Photo Evidence</h4>
+                <p style="color:var(--ns-text-muted);">Always capture the issue during daytime or with sufficient lighting. Step back a few meters so nearby landmarks or street signs are visible in the background for rapid municipal verification.</p>
+              </div>
+              <div style="background:#f8fafc;padding:18px;border-radius:12px;border-left:4px solid var(--ns-green);">
+                <h4 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.05rem;margin-bottom:6px;">2. Accurate Geo-Location</h4>
+                <p style="color:var(--ns-text-muted);">Click "Use GPS" while on site. This embeds exact latitude and longitude into your report, allowing field workers to navigate directly to the exact manhole or broken street pole.</p>
+              </div>
+              <div style="background:#f8fafc;padding:18px;border-radius:12px;border-left:4px solid var(--ns-orange);">
+                <h4 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.05rem;margin-bottom:6px;">3. Direct Department Routing</h4>
+                <p style="color:var(--ns-text-muted);">Selecting the correct category (e.g. Roads, Water, Electricity) routes your report instantly to the nodal engineer without delays from manual sorting.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 8: CITIZEN FEEDBACK                   -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-feedback">
+          <div class="dash-panel" style="max-width:700px;margin:0 auto;">
+            <div class="panel-header">
+              <h2>Municipal Citizen Feedback</h2>
+            </div>
+            <p style="font-size:0.86rem;color:var(--ns-text-muted);margin-bottom:20px;">Your feedback helps evaluate field contractors and improve municipal service delivery.</p>
+            <form onsubmit="submitCitizenFeedbackPage(event)">
+              <div class="form-group-modal">
+                <label>Overall Experience with NagrikSnap Portal</label>
+                <select id="fbRating" class="input-field">
+                  <option value="5">⭐⭐⭐⭐⭐ Excellent (Fast Resolution)</option>
+                  <option value="4" selected>⭐⭐⭐⭐ Good (Satisfactory)</option>
+                  <option value="3">⭐⭐⭐ Average</option>
+                  <option value="2">⭐⭐ Needs Improvement</option>
+                  <option value="1">⭐ Poor (Unresolved)</option>
+                </select>
+              </div>
+              <div class="form-group-modal" style="margin-top:14px;">
+                <label>Your Suggestions or Complaints</label>
+                <textarea id="fbComments" rows="5" class="input-field" placeholder="Tell us how municipal grievance handling can be improved..." required></textarea>
+              </div>
+              <button type="submit" class="btn-report-header" style="margin-top:18px;padding:12px 24px;">
+                <i class="fas fa-paper-plane"></i> Submit Official Feedback
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 9: MY PROFILE & SETTINGS              -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-profile">
+          <div class="dash-panel" style="max-width:700px;margin:0 auto;">
+            <div class="panel-header">
+              <h2>My Citizen Profile & Preferences</h2>
+            </div>
+
+            <!-- Profile Info Banner -->
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:12px;">
+              <div class="profile-avatar" style="width:56px;height:56px;font-size:1.4rem;" id="pageProfileAvatar">AS</div>
+              <div>
+                <h3 id="pageProfileName" style="color:var(--ns-navy);font-size:1.2rem;">Aman Singh</h3>
+                <span style="font-size:0.78rem;background:#e0f2fe;color:#0284c7;padding:3px 10px;border-radius:999px;font-weight:700;">Verified Citizen Account</span>
+              </div>
+            </div>
+
+            <!-- Profile Tabs -->
+            <div class="profile-tabs">
+              <button type="button" class="profile-tab-btn active" id="pageTabBtnPersonal" onclick="switchPageProfileTab('personal')">
+                <i class="fas fa-user-edit"></i> Personal Information
+              </button>
+              <button type="button" class="profile-tab-btn" id="pageTabBtnNotifs" onclick="switchPageProfileTab('notifs')">
+                <i class="fas fa-bell"></i> Notification Settings
+              </button>
+            </div>
+
+            <!-- Tab 1: Personal Details Form -->
+            <div id="pagePanelPersonal">
+              <form onsubmit="saveProfileSettingsFromPage(event)">
+                <div class="form-group-modal">
+                  <label>Full Name</label>
+                  <input type="text" id="pageInputName" class="input-field" required />
+                </div>
+                <div class="form-group-modal">
+                  <label>Email Address</label>
+                  <input type="email" id="pageInputEmail" class="input-field" required />
+                </div>
+                <div class="form-group-modal">
+                  <label>Phone Number</label>
+                  <input type="tel" id="pageInputPhone" class="input-field" required />
+                </div>
+                <div class="form-group-modal">
+                  <label>Residential Area / Ward</label>
+                  <input type="text" id="pageInputAddress" class="input-field" />
+                </div>
+                <button type="submit" class="btn-report-header" id="btnSavePageProfile" style="margin-top:16px;padding:10px 24px;">
+                  <i class="fas fa-check"></i> Save Changes
+                </button>
+              </form>
+            </div>
+
+            <!-- Tab 2: Notification Preferences -->
+            <div id="pagePanelNotifs" style="display:none;">
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>SMS Status Alerts</strong>
+                  <small>Receive instant SMS when your complaint status changes (Assigned, In Progress, Resolved).</small>
+                </div>
+                <label class="switch-ui">
+                  <input type="checkbox" id="pagePrefSms" checked onchange="saveNotificationPreferencesFromPage()">
+                  <span class="slider-ui"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>Email Resolution Reports</strong>
+                  <small>Receive official municipal resolution summary via email.</small>
+                </div>
+                <label class="switch-ui">
+                  <input type="checkbox" id="pagePrefEmail" checked onchange="saveNotificationPreferencesFromPage()">
+                  <span class="slider-ui"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <strong>Community Broadcast Alerts</strong>
+                  <small>Get notified about local ward cleanliness drives & weather alerts.</small>
+                </div>
+                <label class="switch-ui">
+                  <input type="checkbox" id="pagePrefCampaign" checked onchange="saveNotificationPreferencesFromPage()">
+                  <span class="slider-ui"></span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 10: HELP & SUPPORT                    -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-help">
+          <div class="dash-panel" style="max-width:800px;margin:0 auto;">
+            <div class="panel-header">
+              <h2>Help & Municipal Support</h2>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:24px;">
+              <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid var(--ns-border);text-align:center;">
+                <i class="fas fa-phone-volume" style="font-size:1.8rem;color:var(--ns-blue);margin-bottom:8px;"></i>
+                <h4 style="color:var(--ns-navy);margin-bottom:4px;">Civic Helpline</h4>
+                <p style="font-size:0.82rem;color:var(--ns-text-muted);">Toll-Free 1800-11-2026</p>
+              </div>
+              <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid var(--ns-border);text-align:center;">
+                <i class="fas fa-envelope-open-text" style="font-size:1.8rem;color:var(--ns-teal);margin-bottom:8px;"></i>
+                <h4 style="color:var(--ns-navy);margin-bottom:4px;">Email Support</h4>
+                <p style="font-size:0.82rem;color:var(--ns-text-muted);">support@nagriksnap.gov.in</p>
+              </div>
+              <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid var(--ns-border);text-align:center;">
+                <i class="fas fa-clock" style="font-size:1.8rem;color:var(--ns-orange);margin-bottom:8px;"></i>
+                <h4 style="color:var(--ns-navy);margin-bottom:4px;">Operating Hours</h4>
+                <p style="font-size:0.82rem;color:var(--ns-text-muted);">24x7 Citizen Redressal</p>
+              </div>
+            </div>
+
+            <h3 style="font-family:'Poppins',sans-serif;font-size:1.1rem;color:var(--ns-navy);margin-bottom:12px;">Frequently Asked Questions</h3>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.88rem;">
+              <details style="background:#f8fafc;padding:12px 16px;border-radius:8px;border:1px solid var(--ns-border);cursor:pointer;">
+                <summary style="font-weight:700;color:var(--ns-navy);">How long does it take for a complaint to be assigned?</p></summary>
+                <p style="color:var(--ns-text-muted);margin-top:8px;">Reports are triaged by AI and assigned to the nodal municipal engineer within 2 to 4 business hours.</p>
+              </details>
+              <details style="background:#f8fafc;padding:12px 16px;border-radius:8px;border:1px solid var(--ns-border);cursor:pointer;">
+                <summary style="font-weight:700;color:var(--ns-navy);">What happens if an issue is marked resolved but work is incomplete?</p></summary>
+                <p style="color:var(--ns-text-muted);margin-top:8px;">Citizens have 7 days to reopen an issue by providing verification feedback if the physical work was unsatisfactory.</p>
+              </details>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== ISSUE DETAIL MODAL (TIMELINE & TRACKER) ===== -->
+  <div class="modal-overlay" id="issueDetailModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('issueDetailModal')"><i class="fas fa-times"></i></button>
+      
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-right:30px;">
+        <div>
+          <span style="font-size:0.75rem;color:var(--ns-blue);font-weight:800;" id="dtlIssueId">CMP-2026-101</span>
+          <h3 id="dtlTitle" style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.25rem;line-height:1.25;margin:4px 0 6px;">Severe Potholes on Main Road</h3>
+          <span class="status-pill in-progress" id="dtlStatusPill">In Progress</span>
+        </div>
+      </div>
+
+      <!-- 4-Stage Resolution Timeline -->
+      <div class="resolution-timeline">
+        <div class="timeline-progress-bar">
+          <div class="timeline-progress-fill" id="dtlTimelineFill"></div>
+        </div>
+        <div class="timeline-step completed" id="stepReported">
+          <div class="step-circle"><i class="fas fa-check"></i></div>
+          <span class="step-name">1. Reported</span>
+        </div>
+        <div class="timeline-step" id="stepAssigned">
+          <div class="step-circle">2</div>
+          <span class="step-name">2. Assigned</span>
+        </div>
+        <div class="timeline-step" id="stepInProgress">
+          <div class="step-circle">3</div>
+          <span class="step-name">3. In Progress</span>
+        </div>
+        <div class="timeline-step" id="stepResolved">
+          <div class="step-circle">4</div>
+          <span class="step-name">4. Resolved</span>
+        </div>
+      </div>
+
+      <!-- Description & Evidence -->
+      <div style="margin-top:14px;">
+        <h4 style="font-size:0.84rem;color:var(--ns-navy);margin-bottom:4px;">Description:</h4>
+        <p id="dtlDescription" style="font-size:0.86rem;color:var(--ns-text-muted);line-height:1.45;">Potholes causing waterlogging and risk to commuters.</p>
+      </div>
+
+      <!-- Info Details Grid -->
+      <div class="issue-info-grid">
+        <div class="issue-info-item">
+          <strong>Department:</strong>
+          <span id="dtlDept">Public Works / Roads</span>
+        </div>
+        <div class="issue-info-item">
+          <strong>Category:</strong>
+          <span id="dtlCategory">Roads & Footpaths</span>
+        </div>
+        <div class="issue-info-item">
+          <strong>Location:</strong>
+          <span id="dtlLocation">Sector 4 Market</span>
+        </div>
+        <div class="issue-info-item">
+          <strong>Date Reported:</strong>
+          <span id="dtlDate">25 Sep 2026</span>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+        <button type="button" class="btn-report-header" onclick="closeModal('issueDetailModal')">Close</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- ===== DASHBOARD SINGLE-PAGE APPLICATION LOGIC ===== -->
+  <script>
+    const API_BASE = window.NAGRIKSNAP_API_BASE || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8000' ? 'http://127.0.0.1:8000' : '');
+    let currentUser = null;
+    let allComplaints = [];
+    let activeFilter = 'all';
+    let miniMap = null;
+    let fullMap = null;
+    let miniMarkers = [];
+    let fullMarkers = [];
+
+    // Helper: Escape HTML
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    // Mobile Sidebar Toggles
+    function toggleSidebarMobile() {
+      document.getElementById('appSidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('open');
+    }
+    function closeSidebarMobile() {
+      document.getElementById('appSidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+
+    // Modal Helpers
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('show');
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('show');
+    }
+
+    // Topbar Profile Dropdown
+    function toggleProfileDropdown() {
+      const el = document.getElementById('profileDropdown');
+      if (el) el.classList.toggle('show');
+    }
+    document.addEventListener('click', (e) => {
+      const btn = document.getElementById('userProfileBtn');
+      const dd = document.getElementById('profileDropdown');
+      if (btn && dd && !btn.contains(e.target)) {
+        dd.classList.remove('show');
+      }
+    });
+
+    // Logout
+    function citizenLogout() {
+      localStorage.removeItem('nagriksnap_user');
+      window.location.href = 'login.html?role=citizen';
+    }
+
+    // ===== CORE SPA ROUTING: SWITCH VIEWS WITHOUT PAGE RELOAD =====
+    function switchDashboardView(viewKey) {
+      closeSidebarMobile();
+      
+      // Update sidebar active state
+      document.querySelectorAll('.sidebar-menu .nav-item').forEach(item => item.classList.remove('active'));
+      const activeNav = document.getElementById('nav-' + viewKey);
+      if (activeNav) activeNav.classList.add('active');
+
+      // Hide all views & show requested view
+      document.querySelectorAll('.spa-view').forEach(view => view.classList.remove('active'));
+      const targetView = document.getElementById('view-' + viewKey);
+      if (targetView) {
+        targetView.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Handle view-specific initializations
+      if (viewKey === 'nearby') {
+        setTimeout(initFullMap, 100);
+      } else if (viewKey === 'profile') {
+        populatePageProfile();
+      }
+    }
+
+    // Quick filter link from dashboard
+    function filterAndShowIssues(status) {
+      activeFilter = status;
+      switchDashboardView('issues');
+      updateFilterChipUI(status);
+      renderFullIssuesTable();
+    }
+
+    function filterByStatusChip(status) {
+      activeFilter = status;
+      updateFilterChipUI(status);
+      renderFullIssuesTable();
+    }
+
+    function updateFilterChipUI(status) {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      if (status === 'all') document.getElementById('chip-all')?.classList.add('active');
+      else if (status === 'In Progress') document.getElementById('chip-progress')?.classList.add('active');
+      else if (status === 'Resolved') document.getElementById('chip-resolved')?.classList.add('active');
+      else if (status === 'Pending') document.getElementById('chip-pending')?.classList.add('active');
+    }
+
+    // Global Search Filter
+    function handleGlobalSearch(query) {
+      const q = (query || '').toLowerCase().trim();
+      renderRecentTable(q);
+      renderFullIssuesTable(q);
+    }
+
+    // ===== RENDER COMPLAINTS TABLES =====
+    function renderRecentTable(searchQuery = '') {
+      const tbody = document.getElementById('issuesTableBody');
+      if (!tbody) return;
+
+      let filtered = allComplaints;
+      if (searchQuery) {
+        filtered = filtered.filter(item => {
+          const t = (item.title || '').toLowerCase();
+          const l = (item.address || item.location || '').toLowerCase();
+          const c = (item.category || item.department || '').toLowerCase();
+          const s = (item.status || '').toLowerCase();
+          return t.includes(searchQuery) || l.includes(searchQuery) || c.includes(searchQuery) || s.includes(searchQuery);
+        });
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--ns-text-muted);"><i class="fas fa-folder-open" style="font-size:1.8rem;color:#cbd5e1;display:block;margin-bottom:6px;"></i>No civic issues match your search.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.slice(0, 6).map((item, index) => {
+        const title = escapeHtml(item.title || 'Civic Issue');
+        const cat = escapeHtml(item.category || item.department || 'Civic');
+        const loc = escapeHtml(item.address || item.location || 'New Delhi');
+        const status = item.status || 'Pending';
+        const pillClass = getPillClass(status);
+        const dateStr = formatDate(item.created_at);
+
+        return `
+          <tr onclick="openIssueDetail('${item.id || index}')" title="Click to view full issue timeline">
+            <td>${index + 1}</td>
+            <td class="issue-title-cell"><strong>${title}</strong></td>
+            <td>${cat}</td>
+            <td>${loc}</td>
+            <td><span class="status-pill ${pillClass}">${status}</span></td>
+            <td>${dateStr}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderFullIssuesTable(searchQuery = '') {
+      const tbody = document.getElementById('fullIssuesTableBody');
+      if (!tbody) return;
+
+      let filtered = allComplaints;
+
+      if (activeFilter !== 'all') {
+        filtered = filtered.filter(item => {
+          const s = (item.status || 'Pending').toLowerCase();
+          if (activeFilter === 'In Progress') return s.includes('progress') || s.includes('assigned') || s.includes('review');
+          if (activeFilter === 'Resolved') return s.includes('resolved') || s.includes('closed');
+          if (activeFilter === 'Pending') return s.includes('pending') || s.includes('open') || s.includes('crowdsource');
+          return s === activeFilter.toLowerCase();
+        });
+      }
+
+      if (searchQuery) {
+        filtered = filtered.filter(item => {
+          const t = (item.title || '').toLowerCase();
+          const l = (item.address || item.location || '').toLowerCase();
+          const c = (item.category || item.department || '').toLowerCase();
+          return t.includes(searchQuery) || l.includes(searchQuery) || c.includes(searchQuery);
+        });
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--ns-text-muted);"><i class="fas fa-folder-open" style="font-size:2rem;color:#cbd5e1;display:block;margin-bottom:8px;"></i>No reported issues found in this category.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((item, index) => {
+        const title = escapeHtml(item.title || 'Civic Issue');
+        const cat = escapeHtml(item.category || item.department || 'Civic');
+        const loc = escapeHtml(item.address || item.location || 'New Delhi');
+        const status = item.status || 'Pending';
+        const pillClass = getPillClass(status);
+        const dateStr = formatDate(item.created_at);
+
+        return `
+          <tr onclick="openIssueDetail('${item.id || index}')" title="Click to view full issue timeline">
+            <td>${index + 1}</td>
+            <td class="issue-title-cell"><strong>${title}</strong></td>
+            <td>${cat}</td>
+            <td>${loc}</td>
+            <td><span class="status-pill ${pillClass}">${status}</span></td>
+            <td>${dateStr}</td>
+            <td><button type="button" class="btn-report-header" style="padding:4px 12px;font-size:0.75rem;box-shadow:none;"><i class="fas fa-eye"></i> View</button></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function getPillClass(status) {
+      const s = (status || '').toLowerCase();
+      if (s.includes('progress') || s.includes('assigned') || s.includes('review')) return 'in-progress';
+      if (s.includes('resolved') || s.includes('closed')) return 'resolved';
+      if (s.includes('under review')) return 'under-review';
+      return 'pending';
+    }
+
+    function formatDate(raw) {
+      if (!raw) return 'Recent';
+      try {
+        const d = new Date(raw);
+        if (!isNaN(d.getTime())) {
+          const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          return `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()}`;
+        }
+      } catch (_) {}
+      return raw;
+    }
+
+    // ===== OPEN ISSUE DETAIL MODAL (TIMELINE & TRACKER) =====
+    function openIssueDetail(idOrIndex) {
+      const issue = allComplaints.find(i => (i.id === idOrIndex)) || allComplaints[parseInt(idOrIndex)] || allComplaints[0];
+      if (!issue) return;
+
+      document.getElementById('dtlIssueId').textContent = issue.id || 'CMP-2026-LIVE';
+      document.getElementById('dtlTitle').textContent = issue.title || 'Civic Grievance';
+      document.getElementById('dtlDescription').textContent = issue.description || 'Public works issue reported via citizen portal for municipal attention.';
+      document.getElementById('dtlDept').textContent = issue.department || 'Public Works';
+      document.getElementById('dtlCategory').textContent = issue.category || issue.department || 'Infrastructure';
+      document.getElementById('dtlLocation').textContent = issue.address || issue.location || 'New Delhi Region';
+      document.getElementById('dtlDate').textContent = formatDate(issue.created_at);
+
+      const status = issue.status || 'Pending';
+      const pill = document.getElementById('dtlStatusPill');
+      pill.textContent = status;
+      pill.className = 'status-pill ' + getPillClass(status);
+
+      // Timeline Progress Calculation
+      const fill = document.getElementById('dtlTimelineFill');
+      const step1 = document.getElementById('stepReported');
+      const step2 = document.getElementById('stepAssigned');
+      const step3 = document.getElementById('stepInProgress');
+      const step4 = document.getElementById('stepResolved');
+
+      [step1, step2, step3, step4].forEach(s => {
+        s.classList.remove('completed', 'active');
+      });
+
+      const sLower = status.toLowerCase();
+      if (sLower.includes('resolved')) {
+        fill.style.width = '100%';
+        step1.classList.add('completed');
+        step2.classList.add('completed');
+        step3.classList.add('completed');
+        step4.classList.add('completed');
+      } else if (sLower.includes('progress')) {
+        fill.style.width = '66%';
+        step1.classList.add('completed');
+        step2.classList.add('completed');
+        step3.classList.add('active');
+      } else if (sLower.includes('assigned')) {
+        fill.style.width = '33%';
+        step1.classList.add('completed');
+        step2.classList.add('active');
+      } else {
+        fill.style.width = '0%';
+        step1.classList.add('active');
+      }
+
+      openModal('issueDetailModal');
+    }
+
+    // ===== SUBMIT NEW ISSUE (DIRECT FROM PANEL, NO REDIRECT) =====
+    function previewUploadFile(input) {
+      const prev = document.getElementById('uploadFileNamePreview');
+      if (input.files && input.files[0]) {
+        prev.textContent = '📎 Attached: ' + input.files[0].name;
+      } else {
+        prev.textContent = '';
+      }
+    }
+
+    function getGPSLocation() {
+      const hint = document.getElementById('gpsStatusHint');
+      if (!navigator.geolocation) {
+        hint.textContent = 'Geolocation not supported by your browser.';
+        return;
+      }
+      hint.textContent = 'Locating your GPS coordinates...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          document.getElementById('spaLat').value = lat;
+          document.getElementById('spaLng').value = lng;
+          hint.textContent = `📍 GPS Locked: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        },
+        () => {
+          hint.textContent = 'Unable to fetch GPS. Default coordinates used.';
+        }
+      );
+    }
+
+    async function submitNewIssueFromPanel(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitIssue');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting to Authorities...';
+
+      const title = document.getElementById('spaIssueTitle').value.trim();
+      const desc = document.getElementById('spaIssueDesc').value.trim();
+      const cat = document.getElementById('spaIssueCategory').value;
+      const priority = document.getElementById('spaIssuePriority').value;
+      const addr = document.getElementById('spaIssueAddress').value.trim();
+      const lat = parseFloat(document.getElementById('spaLat').value) || 28.6315;
+      const lng = parseFloat(document.getElementById('spaLng').value) || 77.2167;
+      const photoInput = document.getElementById('spaPhotoInput');
+
+      try {
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('description', desc);
+        formData.append('phone', currentUser.phone || '9876543210');
+        formData.append('address', addr);
+        formData.append('department', cat);
+        formData.append('category', cat);
+        formData.append('priority', priority);
+        formData.append('lat', lat);
+        formData.append('lng', lng);
+        if (photoInput.files && photoInput.files[0]) {
+          formData.append('photo', photoInput.files[0]);
+        }
+
+        const token = currentUser && currentUser.token;
+        const res = await fetch(API_BASE + '/api/challenges', {
+          method: 'POST',
+          headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+          body: formData
+        });
+
+        if (!res.ok) throw new Error('Submission server returned error');
+        const data = await res.json();
+
+        alert(`Grievance submitted successfully! Tracking ID: ${data.challenge_id || 'CMP-2026'}. You can track its progress under My Issues.`);
+
+        // Reset Form
+        document.getElementById('spaReportForm').reset();
+        document.getElementById('uploadFileNamePreview').textContent = '';
+
+        // Reload data from backend and switch to My Issues view
+        await loadCitizenDashboard();
+        switchDashboardView('issues');
+      } catch (err) {
+        alert('Grievance recorded locally: ' + err.message);
+        // Fallback local insert
+        allComplaints.unshift({
+          id: 'CMP-' + Date.now().toString().slice(-4),
+          title: title,
+          description: desc,
+          category: cat,
+          department: cat,
+          address: addr,
+          status: 'Pending',
+          created_at: new Date().toISOString().slice(0, 10),
+          lat: lat,
+          lng: lng
+        });
+        updateMetricsAndCharts();
+        switchDashboardView('issues');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Grievance';
+      }
+    }
+
+    // ===== NOTIFICATIONS & FEEDBACK =====
+    function markAllNotificationsRead() {
+      document.getElementById('bellNotifDot').style.display = 'none';
+      document.getElementById('sidebarBadgeCount').style.display = 'none';
+      alert('All notifications marked as read.');
+    }
+
+    function submitCitizenFeedbackPage(e) {
+      e.preventDefault();
+      alert('Thank you! Your municipal service feedback has been recorded.');
+      document.getElementById('fbComments').value = '';
+      switchDashboardView('dashboard');
+    }
+
+    // ===== PROFILE & SETTINGS IN SPA =====
+    function populatePageProfile() {
+      if (!currentUser) return;
+      document.getElementById('pageProfileName').textContent = currentUser.name || 'Citizen';
+      const initials = (currentUser.name || 'AK').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      document.getElementById('pageProfileAvatar').textContent = initials;
+      document.getElementById('pageInputName').value = currentUser.name || '';
+      document.getElementById('pageInputEmail').value = currentUser.email || '';
+      document.getElementById('pageInputPhone').value = currentUser.phone || '';
+      document.getElementById('pageInputAddress').value = currentUser.address || '';
+    }
+
+    function switchPageProfileTab(tab) {
+      const isPersonal = tab === 'personal';
+      document.getElementById('pageTabBtnPersonal').classList.toggle('active', isPersonal);
+      document.getElementById('pageTabBtnNotifs').classList.toggle('active', !isPersonal);
+      document.getElementById('pagePanelPersonal').style.display = isPersonal ? 'block' : 'none';
+      document.getElementById('pagePanelNotifs').style.display = isPersonal ? 'none' : 'block';
+    }
+
+    async function saveProfileSettingsFromPage(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSavePageProfile');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+      const name = document.getElementById('pageInputName').value.trim();
+      const email = document.getElementById('pageInputEmail').value.trim().toLowerCase();
+      const phone = document.getElementById('pageInputPhone').value.trim();
+      const address = document.getElementById('pageInputAddress').value.trim();
+
+      try {
+        const token = currentUser && currentUser.token;
+        const res = await fetch(API_BASE + '/api/me/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+          },
+          body: JSON.stringify({ name, email, phone, address })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.detail || 'Could not update profile');
+
+        currentUser.name = name;
+        currentUser.email = email;
+        currentUser.phone = phone;
+        currentUser.address = address;
+        if (data.token) currentUser.token = data.token;
+        localStorage.setItem('nagriksnap_user', JSON.stringify(currentUser));
+
+        // Update headers
+        const initials = name.split(' ').map(part => part[0]).join('').substring(0, 2).toUpperCase();
+        document.getElementById('welcomeTitle').textContent = `Welcome, ${name} 👋`;
+        document.getElementById('headerUserName').textContent = name;
+        document.getElementById('headerAvatar').textContent = initials;
+        document.getElementById('pageProfileAvatar').textContent = initials;
+        document.getElementById('pageProfileName').textContent = name;
+
+        alert('Profile updated successfully!');
+      } catch (err) {
+        alert('Update error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Save Changes';
+      }
+    }
+
+    function saveNotificationPreferencesFromPage() {
+      const prefs = {
+        sms: document.getElementById('pagePrefSms').checked,
+        email: document.getElementById('pagePrefEmail').checked,
+        campaign: document.getElementById('pagePrefCampaign').checked
+      };
+      localStorage.setItem('nagriksnap_notif_prefs', JSON.stringify(prefs));
+    }
+
+    // ===== MAP INITIALIZATION =====
+    function initMiniMap(issues) {
+      try {
+        if (!miniMap) {
+          miniMap = L.map('miniMap', { zoomControl: false }).setView([28.6315, 77.2167], 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(miniMap);
+        }
+        miniMarkers.forEach(m => miniMap.removeLayer(m));
+        miniMarkers = [];
+
+        const bounds = [];
+        issues.forEach(iss => {
+          const lat = parseFloat(iss.lat);
+          const lng = parseFloat(iss.lng);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            const marker = L.marker([lat, lng]).addTo(miniMap);
+            marker.bindPopup(`<strong>${escapeHtml(iss.title)}</strong><br><span style="color:#0284c7;">${escapeHtml(iss.status)}</span>`);
+            miniMarkers.push(marker);
+            bounds.push([lat, lng]);
+          }
+        });
+        if (bounds.length > 0) miniMap.fitBounds(bounds, { padding: [20, 20] });
+      } catch (err) {
+        console.warn('MiniMap:', err);
+      }
+    }
+
+    function initFullMap() {
+      try {
+        if (!fullMap) {
+          fullMap = L.map('fullMap').setView([28.6315, 77.2167], 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(fullMap);
+        } else {
+          fullMap.invalidateSize();
+        }
+
+        fullMarkers.forEach(m => fullMap.removeLayer(m));
+        fullMarkers = [];
+
+        const bounds = [];
+        allComplaints.forEach(iss => {
+          const lat = parseFloat(iss.lat);
+          const lng = parseFloat(iss.lng);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            const marker = L.marker([lat, lng]).addTo(fullMap);
+            marker.bindPopup(`
+              <div style="font-family:'Nunito',sans-serif;">
+                <strong style="color:#0e2a47;font-size:0.9rem;">${escapeHtml(iss.title)}</strong><br>
+                <span style="font-size:0.75rem;color:#64748b;">${escapeHtml(iss.category || 'Civic')}</span><br>
+                <span class="status-pill ${getPillClass(iss.status)}" style="margin-top:4px;">${escapeHtml(iss.status)}</span>
+              </div>
+            `);
+            fullMarkers.push(marker);
+            bounds.push([lat, lng]);
+          }
+        });
+        if (bounds.length > 0) fullMap.fitBounds(bounds, { padding: [30, 30] });
+      } catch (err) {
+        console.warn('FullMap:', err);
+      }
+    }
+
+    function centerFullMap() {
+      if (fullMap) fullMap.setView([28.6315, 77.2167], 14);
+    }
+
+    // ===== SVG DONUT & CATEGORY BARS =====
+    function drawDonut(inProg, resolved, pending) {
+      const total = inProg + resolved + pending;
+      document.getElementById('donutTotalCount').textContent = total;
+      const pInProg = total > 0 ? Math.round((inProg / total) * 100) : 0;
+      const pResolved = total > 0 ? Math.round((resolved / total) * 100) : 0;
+      const pPending = total > 0 ? Math.round((pending / total) * 100) : 0;
+
+      document.getElementById('legendProgressVal').textContent = `${inProg} (${pInProg}%)`;
+      document.getElementById('legendResolvedVal').textContent = `${resolved} (${pResolved}%)`;
+      document.getElementById('legendPendingVal').textContent = `${pending} (${pPending}%)`;
+
+      const svg = document.getElementById('donutSvg');
+      svg.innerHTML = '<circle cx="60" cy="60" r="48" fill="none" stroke="#f1f5f9" stroke-width="14" />';
+      if (total === 0) return;
+
+      const circumference = 2 * Math.PI * 48;
+      let offset = 0;
+      [
+        { count: inProg, color: '#0ea5e9' },
+        { count: resolved, color: '#22c55e' },
+        { count: pending, color: '#f97316' }
+      ].forEach(seg => {
+        if (seg.count <= 0) return;
+        const dashLen = (seg.count / total) * circumference;
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', '60');
+        circle.setAttribute('cy', '60');
+        circle.setAttribute('r', '48');
+        circle.setAttribute('fill', 'none');
+        circle.setAttribute('stroke', seg.color);
+        circle.setAttribute('stroke-width', '14');
+        circle.setAttribute('stroke-dasharray', `${dashLen} ${circumference - dashLen}`);
+        circle.setAttribute('stroke-dashoffset', `${-offset}`);
+        svg.appendChild(circle);
+        offset += dashLen;
+      });
+    }
+
+    function renderCategoryBars(catCounts) {
+      const container = document.getElementById('categoryBarsList');
+      if (!container) return;
+      const entries = Object.entries(catCounts);
+      if (entries.length === 0) {
+        container.innerHTML = '<p style="font-size:0.8rem;color:var(--ns-text-muted);text-align:center;padding:12px;">No category data</p>';
+        return;
+      }
+      const maxVal = Math.max(...entries.map(e => e[1]), 1);
+      const colors = ['#0ea5e9', '#f97316', '#14b8a6', '#8b5cf6', '#ef4444'];
+      container.innerHTML = entries.slice(0, 5).map(([cat, count], i) => {
+        const pct = Math.round((count / maxVal) * 100);
+        return `
+          <div class="cat-bar-row">
+            <span class="cat-bar-name" title="${escapeHtml(cat)}">${escapeHtml(cat)}</span>
+            <div class="cat-track">
+              <div class="cat-fill" style="width:${pct}%; background:${colors[i % colors.length]};"></div>
+            </div>
+            <span class="cat-bar-count">${count}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderNotifications(issues) {
+      const notifs = [
+        { type: 'green', icon: 'fas fa-circle-check', text: 'Your issue "Garbage Dumping" has been resolved.', time: '2 hours ago' },
+        { type: 'blue', icon: 'fas fa-info-circle', text: 'Department has started working on your issue "Open Manhole".', time: '1 day ago' },
+        { type: 'orange', icon: 'fas fa-clock', text: 'Your issue "Street Light Not Working" is pending with the department.', time: '2 days ago' },
+        { type: 'purple', icon: 'fas fa-bullhorn', text: 'New campaign: Keep Your City Clean & Green.', time: '3 days ago' }
+      ];
+
+      const html = notifs.map(n => `
+        <div class="notif-row">
+          <div class="notif-circle ${n.type}"><i class="${n.icon}"></i></div>
+          <div class="notif-content">
+            <p>${n.text}</p>
+            <small>${n.time}</small>
+          </div>
+        </div>
+      `).join('');
+
+      const feed = document.getElementById('notificationsFeed');
+      if (feed) feed.innerHTML = html;
+      const fullFeed = document.getElementById('fullNotificationsFeed');
+      if (fullFeed) fullFeed.innerHTML = html;
+    }
+
+    function updateMetricsAndCharts() {
+      let inProgressCount = 0;
+      let resolvedCount = 0;
+      let pendingCount = 0;
+      const catMap = {};
+
+      allComplaints.forEach(item => {
+        const s = (item.status || 'Pending').toLowerCase();
+        if (s.includes('progress') || s.includes('assigned') || s.includes('review')) {
+          inProgressCount++;
+        } else if (s.includes('resolved') || s.includes('closed')) {
+          resolvedCount++;
+        } else {
+          pendingCount++;
+        }
+        const cat = item.category || item.department || 'General';
+        catMap[cat] = (catMap[cat] || 0) + 1;
+      });
+
+      // Update stat cards
+      document.getElementById('statTotal').textContent = allComplaints.length;
+      document.getElementById('statInProgress').textContent = inProgressCount;
+      document.getElementById('statResolved').textContent = resolvedCount;
+      document.getElementById('statPending').textContent = pendingCount;
+
+      // Update filter chips count
+      document.getElementById('chipCountAll').textContent = allComplaints.length;
+      document.getElementById('chipCountProg').textContent = inProgressCount;
+      document.getElementById('chipCountRes').textContent = resolvedCount;
+      document.getElementById('chipCountPend').textContent = pendingCount;
+
+      // Render visuals
+      renderRecentTable();
+      renderFullIssuesTable();
+      drawDonut(inProgressCount, resolvedCount, pendingCount);
+      renderCategoryBars(catMap);
+      renderNotifications(allComplaints);
+      initMiniMap(allComplaints);
+    }
+
+    // ===== MAIN DASHBOARD INITIALIZATION =====
+    async function loadCitizenDashboard() {
+      try {
+        currentUser = JSON.parse(localStorage.getItem('nagriksnap_user') || '{}');
+      } catch (_) {
+        currentUser = {};
+      }
+
+      const name = currentUser.name || 'Citizen';
+      const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AK';
+
+      document.getElementById('welcomeTitle').textContent = `Welcome, ${name} 👋`;
+      document.getElementById('headerUserName').textContent = name;
+      document.getElementById('headerAvatar').textContent = initials;
+
+      // Fetch live complaints
+      try {
+        const token = currentUser.token;
+        const res = await fetch(API_BASE + '/api/me/complaints?per_page=100&page=1', {
+          headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+        });
+        if (res.ok) {
+          const data = await res.json();
+          allComplaints = data.complaints || [];
+        } else {
+          throw new Error('API Error');
+        }
+      } catch (_) {
+        // Fallback demo data
+        allComplaints = [
+          { id: 'CMP-2026-101', title: 'Open Manhole Hazard', category: 'Road Safety', department: 'Public Works', address: 'Vadodara Market', status: 'In Progress', created_at: '2026-09-25', lat: 22.3072, lng: 73.1812, description: 'Missing manhole cover causing hazard for two wheelers.' },
+          { id: 'CMP-2026-102', title: 'Street Light Not Working', category: 'Electricity', department: 'Electrical', address: 'Parul University', status: 'Pending', created_at: '2026-09-22', lat: 22.2887, lng: 73.3634, description: 'Row of 5 streetlights dark for past two weeks.' },
+          { id: 'CMP-2026-103', title: 'Garbage Dumping on Sidewalk', category: 'Cleanliness', department: 'Sanitation', address: 'Waghodia Road', status: 'Resolved', created_at: '2026-09-18', lat: 22.2980, lng: 73.2200, description: 'Overflowing municipal bin cleared and cleaned.' },
+          { id: 'CMP-2026-104', title: 'Water Leakage in Main Pipeline', category: 'Water Supply', department: 'Water Board', address: 'Atladara', status: 'In Progress', created_at: '2026-09-15', lat: 22.2750, lng: 73.1600, description: 'Pipeline burst leaking potable water onto the road.' },
+          { id: 'CMP-2026-105', title: 'Broken Footpath & Curbs', category: 'Infrastructure', department: 'Public Works', address: 'Parul University Gate 1', status: 'Resolved', created_at: '2026-09-10', lat: 22.2900, lng: 73.3600, description: 'Pedestrian walkway repaved with tactile pavers.' }
+        ];
+      }
+
+      updateMetricsAndCharts();
+    }
+
+    window.addEventListener('DOMContentLoaded', loadCitizenDashboard);
+  </script>
+</body>
+</html>

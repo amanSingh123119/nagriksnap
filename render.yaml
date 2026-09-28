@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: nagriksnap
+    runtime: python
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "python -m uvicorn main:app --app-dir backend --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: EVIDENCE_STORAGE_MODE
+        value: local
+      - key: GROQ_API_KEY
+        sync: false
+      - key: FAST2SMS_API_KEY
+        sync: false

@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explore Civic Challenges & GIS Hub – NagrikSnap</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .view-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: -25px auto 25px;
+      position: relative;
+      z-index: 10;
+    }
+    .view-tab {
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .view-tab.active {
+      background: #0284c7;
+      color: white;
+      border-color: #0284c7;
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35);
+    }
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-chip {
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid #cbd5e1;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-chip.active, .filter-chip:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .challenge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 24px;
+      margin-bottom: 50px;
+    }
+    .challenge-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(14, 165, 233, 0.1);
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .challenge-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 36px rgba(14, 165, 233, 0.18);
+    }
+    .card-tags {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .tag-domain {
+      background: #e0f2fe;
+      color: #0284c7;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tag-priority {
+      background: #fef3c7;
+      color: #d97706;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+    .tag-priority.critical {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    .challenge-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .challenge-desc {
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .challenge-meta {
+      font-size: 0.82rem;
+      color: #64748b;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-top: 12px;
+      border-top: 1px dashed #e2e8f0;
+    }
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: auto;
+    }
+    .card-actions .btn {
+      flex: 1;
+      padding: 9px 10px;
+      font-size: 0.82rem;
+      text-align: center;
+      justify-content: center;
+    }
+
+    /* Map section */
+    #jharkhandMap {
+      height: 520px;
+      border-radius: 20px;
+      border: 2px solid #bae6fd;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.1);
+      margin-bottom: 40px;
+    }
+
+    /* Leaderboard Styles */
+    .leaderboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 50px;
+    }
+    .lb-card {
+      background: white;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      padding: 24px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+    .lb-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-box {
+      background: white;
+      border-radius: 20px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="particles" id="particles"></div>
+
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="logo">
+        <span class="logo-icon">📸</span>
+        <span class="logo-text">Nagrik<span>Snap</span></span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html" data-i18n="nav_home">Home</a>
+        <a href="report.html" data-i18n="nav_report">Crowdsource Challenge</a>
+        <a href="challenges.html" class="active" data-i18n="nav_challenges">Explore & Solve</a>
+        <a href="track.html" data-i18n="nav_track">Track Status</a>
+        <a href="login.html" data-i18n="nav_login">Login</a>
+        <a href="admin.html" class="admin-link" data-i18n="nav_admin">Admin</a>
+      </div>
+      <button class="mobile-menu-btn" id="menuBtn" aria-label="Toggle navigation menu"><i class="fas fa-bars"></i></button>
+    </div>
+  </nav>
+
+  <section class="page-header" style="background: linear-gradient(135deg, #0284c7, #0f766e); color: white; text-align: center; padding: 45px 20px 55px;">
+    <div class="container">
+      <div class="badge" style="background:rgba(255,255,255,0.2);color:white;display:inline-block;padding:6px 14px;border-radius:999px;font-size:0.85rem;font-weight:700;margin-bottom:12px;">
+        🎓 Quadruple Helix Innovation & Civic Resolution Portal
+      </div>
+      <h1 style="font-size:2.3rem;margin-bottom:10px;">Civic & Societal Challenges Directory</h1>
+      <p style="max-width:750px;margin:0 auto;opacity:0.95;font-size:1.05rem;">
+        Explore live challenge records across municipal wards. University research teams can propose technological solutions and CSR partners can sponsor implementations.
+      </p>
+    </div>
+  </section>
+
+  <!-- View Switcher -->
+  <div class="container">
+    <p role="note" style="margin:12px 0;padding:10px 14px;border:1px solid #fcd34d;border-radius:10px;background:#fffbeb;color:#92400e;font-size:.88rem;"><strong>Prototype notice:</strong> Challenge cards, maps, proposal counts, partner listings and funding amounts may be sample data. Verify records before treating them as real.</p>
+    <div class="view-switcher">
+      <button class="view-tab active" id="tabGrid" onclick="switchMainView('grid')">
+        <i class="fas fa-grip"></i> Challenges Grid
+      </button>
+      <button class="view-tab" id="tabMap" onclick="switchMainView('map')">
+        <i class="fas fa-map-location-dot"></i> Jharkhand GIS Map
+      </button>
+      <button class="view-tab" id="tabStats" onclick="switchMainView('stats')">
+        <i class="fas fa-trophy"></i> Quadruple Helix Impact
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- VIEW 1: GRID VIEW -->
+    <div id="viewGrid">
+      <div class="filter-bar">
+        <div class="filter-chips">
+          <button class="filter-chip active" onclick="filterChallenges('all', this)">All Domains</button>
+          <button class="filter-chip" onclick="filterChallenges('Disaster Management', this)">⚠️ Disaster Management</button>
+          <button class="filter-chip" onclick="filterChallenges('Water & Sanitation', this)">🚰 Water & Sanitation</button>
+          <button class="filter-chip" onclick="filterChallenges('Renewable Energy', this)">💡 Renewable Energy</button>
+          <button class="filter-chip" onclick="filterChallenges('Infrastructure', this)">🏗️ Infrastructure</button>
+          <button class="filter-chip" onclick="filterChallenges('Rural & Agricultural', this)">🌾 Rural & Agriculture</button>
+        </div>
+        <div style="min-width:260px;">
+          <input type="text" id="searchChallenge" placeholder="Search by keyword, district, or tech..." style="width:100%;padding:10px 14px;border-radius:12px;border:1px solid #cbd5e1;font-family:inherit;" onkeyup="searchChallengeCards()" />
+        </div>
+      </div>
+
+      <!-- Challenges Feed Grid -->
+      <div class="challenge-grid" id="challengeGrid">
+        <!-- Challenge Card 1 -->
+        <div class="challenge-card" data-domain="Disaster Management" id="card-SOC-2026-FL01">
+          <div>
+            <div class="card-tags">
+              <span class="tag-domain">Disaster Management</span>
+              <span class="tag-priority critical">Urgency: Critical (9/10)</span>
+            </div>
+            <h3 class="challenge-title">Flash Flood & Flash Drainage Choke Alert in Subarnarekha Basin</h3>
+            <p class="challenge-desc">Low-lying habitations experience recurring waterlogging and flash floods during monsoon surges. Need an automated IoT sensor alert network and predictive flow analytics model.</p>
+            <div class="challenge-meta">
+              <span><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> Ranchi / Jamshedpur Belt, Jharkhand</span>
+              <span><i class="fas fa-bullseye"></i> <strong>Target Solution:</strong> IoT Flood Sensor / Early Warning SMS System</span>
+              <span><i class="fas fa-hand-holding-dollar"></i> <strong>CSR Grant Pool:</strong> ₹2,50,000 Pledged</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a href="caseroom.html?id=SOC-2026-FL01" class="btn btn-secondary" style="background:#0f172a;color:#38bdf8;border:none;">
+              <i class="fas fa-door-open"></i> Case Room
+            </a>
+            <button class="btn btn-primary" onclick="openProposalModal('SOC-2026-FL01', 'Flash Flood Early Warning System')">
+              <i class="fas fa-graduation-cap"></i> Solve
+            </button>
+            <button class="btn btn-secondary" onclick="openCsrModal('SOC-2026-FL01')">
+              <i class="fas fa-handshake"></i> CSR
+            </button>
+          </div>
+        </div>
+
+        <!-- Challenge Card 2 -->
+        <div class="challenge-card" data-domain="Water & Sanitation" id="card-SOC-2026-WT02">
+          <div>
+            <div class="card-tags">
+              <span class="tag-domain">Water & Sanitation</span>
+              <span class="tag-priority">Urgency: High (8/10)</span>
+            </div>
+            <h3 class="challenge-title">Heavy Metal & Fluoride Contamination in Rural Borewells</h3>
+            <p class="challenge-desc">Rural tribal clusters facing non-potable groundwater with high mineral toxicity. Require low-cost filtration nanotechnology or solar-powered purification kiosks.</p>
+            <div class="challenge-meta">
+              <span><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> Palamu & Garhwa Districts, Jharkhand</span>
+              <span><i class="fas fa-bullseye"></i> <strong>Target Solution:</strong> Bio-sorbent filter / Solar water ATM</span>
+              <span><i class="fas fa-hand-holding-dollar"></i> <strong>CSR Grant Pool:</strong> ₹1,80,000 Pledged</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a href="caseroom.html?id=SOC-2026-WT02" class="btn btn-secondary" style="background:#0f172a;color:#38bdf8;border:none;">
+              <i class="fas fa-door-open"></i> Case Room
+            </a>
+            <button class="btn btn-primary" onclick="openProposalModal('SOC-2026-WT02', 'Low-Cost Groundwater Purification')">
+              <i class="fas fa-graduation-cap"></i> Solve
+            </button>
+            <button class="btn btn-secondary" onclick="openCsrModal('SOC-2026-WT02')">
+              <i class="fas fa-handshake"></i> CSR
+            </button>
+          </div>
+        </div>
+
+        <!-- Challenge Card 3 -->
+        <div class="challenge-card" data-domain="Renewable Energy" id="card-SOC-2026-EN03">
+          <div>
+            <div class="card-tags">
+              <span class="tag-domain">Renewable Energy</span>
+              <span class="tag-priority">Urgency: Medium (6/10)</span>
+            </div>
+            <h3 class="challenge-title">Off-Grid Solar Microgrid & Cold Storage for Perishable Crops</h3>
+            <p class="challenge-desc">Vegetable farmers in remote blocks suffer post-harvest losses due to unreliable 3-phase grid power. Need decentralized solar chilling units with smart load-balancing.</p>
+            <div class="challenge-meta">
+              <span><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> Khunti & Simdega, Jharkhand</span>
+              <span><i class="fas fa-bullseye"></i> <strong>Target Solution:</strong> Solar Microgrid / Thermal Energy Storage</span>
+              <span><i class="fas fa-hand-holding-dollar"></i> <strong>CSR Grant Pool:</strong> ₹3,00,000 Pledged</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a href="caseroom.html?id=SOC-2026-EN03" class="btn btn-secondary" style="background:#0f172a;color:#38bdf8;border:none;">
+              <i class="fas fa-door-open"></i> Case Room
+            </a>
+            <button class="btn btn-primary" onclick="openProposalModal('SOC-2026-EN03', 'Decentralized Solar Cold Storage')">
+              <i class="fas fa-graduation-cap"></i> Solve
+            </button>
+            <button class="btn btn-secondary" onclick="openCsrModal('SOC-2026-EN03')">
+              <i class="fas fa-handshake"></i> CSR
+            </button>
+          </div>
+        </div>
+
+        <!-- Challenge Card 4 -->
+        <div class="challenge-card" data-domain="Infrastructure" id="card-SOC-2026-IN04">
+          <div>
+            <div class="card-tags">
+              <span class="tag-domain">Infrastructure</span>
+              <span class="tag-priority">Urgency: High (7/10)</span>
+            </div>
+            <h3 class="challenge-title">AI Pothole & Bridge Structural Health Monitoring</h3>
+            <p class="challenge-desc">Mining corridors have frequent heavy freight wear-and-tear causing dangerous road damage and bridge vibration fatigue. Computer vision & accelerometer analysis needed.</p>
+            <div class="challenge-meta">
+              <span><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> Dhanbad - Bokaro Highway Segment</span>
+              <span><i class="fas fa-bullseye"></i> <strong>Target Solution:</strong> Edge AI Camera / Structural Vibration Sensors</span>
+              <span><i class="fas fa-hand-holding-dollar"></i> <strong>CSR Grant Pool:</strong> ₹1,50,000 Pledged</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a href="caseroom.html?id=SOC-2026-IN04" class="btn btn-secondary" style="background:#0f172a;color:#38bdf8;border:none;">
+              <i class="fas fa-door-open"></i> Case Room
+            </a>
+            <button class="btn btn-primary" onclick="openProposalModal('SOC-2026-IN04', 'Edge AI Structural Road Inspection')">
+              <i class="fas fa-graduation-cap"></i> Solve
+            </button>
+            <button class="btn btn-secondary" onclick="openCsrModal('SOC-2026-IN04')">
+              <i class="fas fa-handshake"></i> CSR
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: JHARKHAND GIS MAP VIEW -->
+    <div id="viewMap" style="display:none;">
+      <div style="background:white;padding:20px;border-radius:16px;border:1px solid #e2e8f0;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 style="margin:0 0 4px;color:#0f172a;"><i class="fas fa-map-marked-alt text-primary"></i> Jharkhand State Societal Heatmap</h3>
+          <p style="margin:0;font-size:0.88rem;color:#64748b;">Challenge locations and categories (map data may include illustrative records)</p>
+        </div>
+        <div style="display:flex;gap:8px;font-size:0.85rem;font-weight:700;">
+          <span style="color:#dc2626;"><i class="fas fa-circle"></i> Critical Urgency</span>
+          <span style="color:#d97706;"><i class="fas fa-circle"></i> High Urgency</span>
+          <span style="color:#0284c7;"><i class="fas fa-circle"></i> Medium Urgency</span>
+        </div>
+      </div>
+      <div id="jharkhandMap"></div>
+    </div>
+
+    <!-- VIEW 3: QUADRUPLE HELIX IMPACT & LEADERBOARD -->
+    <div id="viewStats" style="display:none;">
+      <div class="leaderboard-grid">
+        <!-- Top Universities -->
+        <div class="lb-card">
+          <h3 style="font-size:1.15rem;font-weight:800;color:#0369a1;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-graduation-cap"></i> Top Solving Universities & Colleges
+          </h3>
+          <div class="lb-item">
+            <div>
+              <strong>1. BIT Mesra, Ranchi</strong>
+              <div style="font-size:0.8rem;color:#64748b;">Illustrative demo figures — not live-verified</div>
+            </div>
+            <span class="badge" style="background:#e0f2fe;color:#0284c7;font-weight:800;">4,850 Pts</span>
+          </div>
+          <div class="lb-item">
+            <div>
+              <strong>2. IIT (ISM) Dhanbad</strong>
+              <div style="font-size:0.8rem;color:#64748b;">Illustrative demo figures — not live-verified</div>
+            </div>
+            <span class="badge" style="background:#fef3c7;color:#d97706;font-weight:800;">4,200 Pts</span>
+          </div>
+          <div class="lb-item">
+            <div>
+              <strong>3. NIT Jamshedpur</strong>
+              <div style="font-size:0.8rem;color:#64748b;">Illustrative demo figures — not live-verified</div>
+            </div>
+            <span class="badge" style="background:#dcfce7;color:#16a34a;font-weight:800;">3,650 Pts</span>
+          </div>
+          <div class="lb-item">
+            <div>
+              <strong>4. Birsa Agricultural University</strong>
+              <div style="font-size:0.8rem;color:#64748b;">Illustrative demo figures — not live-verified</div>
+            </div>
+            <span class="badge" style="background:#f1f5f9;color:#475569;font-weight:800;">2,900 Pts</span>
+          </div>
+        </div>
+
+        <!-- Top CSR Grant Donors -->
+        <div class="lb-card">
+          <h3 style="font-size:1.15rem;font-weight:800;color:#15803d;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-hand-holding-dollar"></i> Industry & CSR Funding Partners
+          </h3>
+          <div class="lb-item">
+            <div>
+              <strong>1. Example CSR Partner A (sample)</strong>
+              <div style="font-size:0.8rem;color:#64748b;">Illustrative sample activity — not verified</div>
+            </div>
+            <span style="font-weight:800;color:#16a34a;">Sample amount: ₹18.5 lakh (not verified)</span>
+          </div>
+          <div class="lb-item">
+            <div>
+              <strong>2. Example CSR Partner B (sample)</strong>
+              <div style="font-size:0.8rem;color:#64748b;">Illustrative sample activity — not verified</div>
+            </div>
+            <span style="font-weight:800;color:#16a34a;">Sample amount: ₹12 lakh (not verified)</span>
+          </div>
+          <div class="lb-item">
+            <div>
+              <strong>3. Example CSR Partner C (sample)</strong>
+              <div style="font-size:0.8rem;color:#64748b;">Illustrative sample activity — not verified</div>
+            </div>
+            <span style="font-weight:800;color:#16a34a;">Sample amount: ₹8.5 lakh (not verified)</span>
+          </div>
+          <div class="lb-item">
+            <div>
+              <strong>4. Example CSR Partner D (sample)</strong>
+              <div style="font-size:0.8rem;color:#64748b;">Illustrative demo figure — not live-verified</div>
+            </div>
+            <span style="font-weight:800;color:#16a34a;">Sample amount: ₹6 lakh (not verified)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Proposal Submission Modal (University / Innovators) -->
+  <div class="modal-backdrop" id="proposalModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('proposalModal')">&times;</button>
+      <h2 style="font-size:1.4rem;color:var(--primary-dark);margin-bottom:8px;">
+        🎓 Submit University / Innovator Solution Proposal
+      </h2>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:20px;">
+        Challenge ID: <strong id="modalChallengeId">—</strong> | <span id="modalChallengeTitle">—</span>
+      </p>
+      <form id="solutionProposalForm" onsubmit="handleProposalSubmit(event)">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-weight:700;font-size:0.9rem;">University / Institution / Startup Name</label>
+          <input type="text" id="propInstitution" placeholder="e.g. BIT Mesra / IIT ISM Dhanbad / Innovators Club" required style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;font-family:inherit;" />
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-weight:700;font-size:0.9rem;">Lead Researcher / Student Name & Email</label>
+          <input type="text" id="propLead" placeholder="e.g. Rahul Verma (rahul@univ.edu.in)" required style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;font-family:inherit;" />
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-weight:700;font-size:0.9rem;">Technical Solution Abstract & Architecture</label>
+          <textarea id="propAbstract" rows="3" placeholder="Describe your technical methodology, sensors, algorithm, or hardware prototype..." required style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;font-family:inherit;"></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-weight:700;font-size:0.9rem;">Prototype Demo Link / GitHub Repository</label>
+          <input type="url" id="propDemoLink" placeholder="https://github.com/team/project or live demo link" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;font-family:inherit;" />
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label style="font-weight:700;font-size:0.9rem;">Estimated Pilot Budget / CSR Grant Requested (₹)</label>
+          <input type="number" id="propBudget" placeholder="e.g. 75000" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;font-family:inherit;" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-large" style="width:100%;">
+          <i class="fas fa-paper-plane"></i> Submit Solution Proposal
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- CSR Sponsorship Modal (Industry Partners) -->
+  <div class="modal-backdrop" id="csrModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('csrModal')">&times;</button>
+      <h2 style="font-size:1.4rem;color:#0284c7;margin-bottom:8px;">
+        🏢 Industry & CSR Sponsorship Pledge
+      </h2>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:20px;">
+        Sponsor implementation, provide technical mentorship, or adopt a pilot for Challenge ID: <strong id="csrChallengeId">—</strong>
+      </p>
+      <form id="csrPledgeForm" onsubmit="handleCsrSubmit(event)">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-weight:700;font-size:0.9rem;">Company / Foundation Name</label>
+          <input type="text" id="csrCompany" placeholder="e.g. Tata Steel CSR / Coal India Ltd / Tech Enterprise" required style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;font-family:inherit;" />
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-weight:700;font-size:0.9rem;">CSR Officer / Industry Lead Contact</label>
+          <input type="text" id="csrContact" placeholder="Name & Official Work Email" required style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;font-family:inherit;" />
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-weight:700;font-size:0.9rem;">Support Type</label>
+          <select id="csrSupportType" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;font-family:inherit;">
+            <option value="CSR Grant Funding">Direct CSR Grant Funding</option>
+            <option value="Technical Mentorship & Hardware Kits">Technical Mentorship & Hardware Kits</option>
+            <option value="Pilot Sandbox & Commercial Scale-up">Pilot Sandbox & Commercial Scale-up</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label style="font-weight:700;font-size:0.9rem;">Pledged Amount (₹)</label>
+          <input type="number" id="csrAmount" placeholder="e.g. 150000" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;font-family:inherit;" />
+        </div>
+        <button type="submit" class="btn btn-secondary btn-large" style="width:100%;">
+          <i class="fas fa-handshake"></i> Confirm CSR Partnership Pledge
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-text">Nagrik<span>Snap</span></span>
+          <p data-i18n="tagline">Citizen Grievance & Smart City Resolution Platform</p>
+        </div>
+        <div class="footer-links">
+          <a href="challenges.html">Explore Challenges</a>
+          <a href="report.html" data-i18n="nav_report">Crowdsource Challenge</a>
+          <a href="track.html" data-i18n="nav_track">Track Status</a>
+          <a href="admin.html" data-i18n="nav_admin">Admin</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p data-i18n="footer">© 2026 NagrikSnap • Empowering Citizens & Communities</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/chatbotAi.js"></script>
+  <script>
+    const API_BASE = window.NAGRIKSNAP_API_BASE || ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8000' ? 'http://127.0.0.1:8000' : '');
+    function workflowSession(expectedRole) {
+      let s = null; try { s = JSON.parse(localStorage.getItem('nagriksnap_admin') || 'null') || JSON.parse(localStorage.getItem('nagriksnap_user') || 'null'); } catch (_) {}
+      if (!s || !s.token || (expectedRole && s.role !== expectedRole && !['admin','govt_admin'].includes(s.role))) throw new Error('Sign in with an authorized ' + expectedRole + ' account before submitting.');
+      return s;
+    }
+    let mapInstance = null;
+
+    // Switch between Grid, Map, and Impact Stats
+    function switchMainView(view) {
+      document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('viewGrid').style.display = view === 'grid' ? 'block' : 'none';
+      document.getElementById('viewMap').style.display = view === 'map' ? 'block' : 'none';
+      document.getElementById('viewStats').style.display = view === 'stats' ? 'block' : 'none';
+
+      if (view === 'grid') document.getElementById('tabGrid').classList.add('active');
+      if (view === 'map') {
+        document.getElementById('tabMap').classList.add('active');
+        initJharkhandMap();
+      }
+      if (view === 'stats') document.getElementById('tabStats').classList.add('active');
+    }
+
+    function initJharkhandMap() {
+      if (mapInstance) {
+        setTimeout(() => mapInstance.invalidateSize(), 200);
+        return;
+      }
+      // Centered on Ranchi / Jharkhand (23.6102, 85.2799)
+      mapInstance = L.map('jharkhandMap').setView([23.6102, 85.4799], 8);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(mapInstance);
+
+      // Seed Jharkhand regional challenge pins
+      const jharkhandLocations = [
+        { id: 'SOC-2026-FL01', lat: 23.3441, lng: 85.3096, title: 'Flash Flood & Drainage Alert', district: 'Ranchi / Jamshedpur', domain: 'Disaster Management', urgency: 'Critical', grant: '₹2,50,000' },
+        { id: 'SOC-2026-WT02', lat: 24.0435, lng: 84.0722, title: 'Fluoride Water Purification', district: 'Palamu / Garhwa', domain: 'Water & Sanitation', urgency: 'High', grant: '₹1,80,000' },
+        { id: 'SOC-2026-EN03', lat: 23.0725, lng: 85.2789, title: 'Solar Cold Storage Microgrid', district: 'Khunti / Simdega', domain: 'Renewable Energy', urgency: 'Medium', grant: '₹3,00,000' },
+        { id: 'SOC-2026-IN04', lat: 23.7957, lng: 86.4304, title: 'AI Pothole & Bridge Structural Health', district: 'Dhanbad / Bokaro', domain: 'Infrastructure', urgency: 'High', grant: '₹1,50,000' },
+        { id: 'SOC-2026-AG05', lat: 23.9925, lng: 85.3637, title: 'IoT Soil Moisture & Smart Irrigation', district: 'Hazaribagh', domain: 'Rural & Agriculture', urgency: 'Medium', grant: '₹1,20,000' },
+        { id: 'SOC-2026-HL06', lat: 24.4826, lng: 86.6977, title: 'Point-of-Care Tribal Health Kiosk', district: 'Deoghar / Dumka', domain: 'Healthcare', urgency: 'High', grant: '₹2,00,000' }
+      ];
+
+      jharkhandLocations.forEach(loc => {
+        const markerColor = loc.urgency === 'Critical' ? '#dc2626' : (loc.urgency === 'High' ? '#d97706' : '#0284c7');
+        const customIcon = L.divIcon({
+          className: 'custom-pin',
+          html: `<div style="background:${markerColor};width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;font-size:10px;"><i class="fas fa-bolt"></i></div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+
+        const marker = L.marker([loc.lat, loc.lng], { icon: customIcon }).addTo(mapInstance);
+        marker.bindPopup(`
+          <div style="font-family:'Nunito',sans-serif;min-width:200px;">
+            <span style="font-size:0.75rem;font-weight:800;background:#e0f2fe;color:#0284c7;padding:2px 6px;border-radius:4px;">${loc.domain}</span>
+            <h4 style="margin:6px 0 4px;font-size:0.95rem;color:#0f172a;">${loc.title}</h4>
+            <div style="font-size:0.8rem;color:#64748b;margin-bottom:8px;">
+              <i class="fas fa-map-marker-alt"></i> ${loc.district}<br>
+              <strong>CSR Grant:</strong> ${loc.grant}
+            </div>
+            <a href="caseroom.html?id=${loc.id}" style="display:inline-block;width:100%;padding:6px;background:#0284c7;color:white;text-align:center;border-radius:6px;font-weight:700;font-size:0.8rem;text-decoration:none;">
+              🚀 Open Quadruple Helix Case Room
+            </a>
+          </div>
+        `);
+      });
+    }
+
+    // Dynamic challenge loader from backend
+    async function loadDynamicChallenges() {
+      try {
+        const res = await fetch(`${API_BASE}/api/challenges?per_page=50`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = data.challenges || data.complaints || [];
+        if (list.length > 0) {
+          const grid = document.getElementById('challengeGrid');
+          list.forEach(c => {
+            const domain = c.category || c.department || 'Disaster Management';
+            const urgency = c.priority || 'High';
+            const isCrit = urgency.toLowerCase() === 'high' || urgency.toLowerCase() === 'critical';
+            
+            if (document.getElementById(`card-${c.id}`)) return;
+
+            const card = document.createElement('div');
+            card.className = 'challenge-card';
+            card.id = `card-${c.id}`;
+            card.setAttribute('data-domain', domain);
+            card.innerHTML = `
+              <div>
+                <div class="card-tags">
+                  <span class="tag-domain">${domain}</span>
+                  <span class="tag-priority ${isCrit ? 'critical' : ''}">Urgency: ${urgency}</span>
+                </div>
+                <h3 class="challenge-title">${c.title || c.description.slice(0, 60) + '...'}</h3>
+                <p class="challenge-desc">${c.description}</p>
+                <div class="challenge-meta">
+                  <span><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${c.address || 'Geo-Coordinates Tagged'}</span>
+                  <span><i class="fas fa-bullseye"></i> <strong>SDG / Focus:</strong> ${c.sdg_tag || 'Sustainable Development'}</span>
+                  <span><i class="fas fa-hand-holding-dollar"></i> <strong>CSR / Bounty Pool:</strong> ₹${(c.bounty_amount || c.sponsor_grant || 100000).toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <a href="caseroom.html?id=${c.id}" class="btn btn-secondary" style="background:#0f172a;color:#38bdf8;border:none;">
+                  <i class="fas fa-door-open"></i> Case Room
+                </a>
+                <button class="btn btn-primary" onclick="openProposalModal('${c.id}', '${(c.title || c.id).replace(/'/g, "\\'")}')">
+                  <i class="fas fa-graduation-cap"></i> Solve
+                </button>
+                <button class="btn btn-secondary" onclick="openCsrModal('${c.id}')">
+                  <i class="fas fa-handshake"></i> CSR
+                </button>
+              </div>
+            `;
+            grid.insertBefore(card, grid.firstChild);
+          });
+        }
+      } catch (err) {
+        console.log('Using local pre-seeded challenge repository', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDynamicChallenges();
+    });
+
+    function filterChallenges(domain, btn) {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      const cards = document.querySelectorAll('.challenge-card');
+      cards.forEach(card => {
+        const cardDomain = card.getAttribute('data-domain') || '';
+        if (domain === 'all' || cardDomain.toLowerCase().includes(domain.toLowerCase())) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function searchChallengeCards() {
+      const q = document.getElementById('searchChallenge').value.toLowerCase();
+      document.querySelectorAll('.challenge-card').forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    function openProposalModal(id, title) {
+      document.getElementById('modalChallengeId').innerText = id;
+      document.getElementById('modalChallengeTitle').innerText = title || id;
+      document.getElementById('proposalModal').classList.add('show');
+    }
+
+    function openCsrModal(id) {
+      document.getElementById('csrChallengeId').innerText = id;
+      document.getElementById('csrModal').classList.add('show');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    async function handleProposalSubmit(e) {
+      e.preventDefault();
+      const challengeId = document.getElementById('modalChallengeId').innerText;
+      let session; try { session = workflowSession('university'); } catch (err) { alert(err.message); return; }
+      const institution = (session.role === 'university' ? session.organization : document.getElementById('propInstitution').value).trim();
+      if (!institution) { alert('Your university account must have an approved organization.'); return; }
+      const lead = document.getElementById('propLead').value;
+      const abstract = document.getElementById('propAbstract').value;
+      const demoLink = document.getElementById('propDemoLink').value;
+      const budget = parseFloat(document.getElementById('propBudget').value || '0');
+
+      const payload = {
+        challenge_id: challengeId,
+        team_name: lead.split(' ')[0] + ' Innovators',
+        university_name: institution,
+        lead_name: lead,
+        lead_email: (document.getElementById('propLeadEmail')?.value || session.email || '').trim(),
+        lead_phone: (document.getElementById('propLeadPhone')?.value || session.phone || '').trim(),
+        tech_stack: "IoT / AI / Embedded Systems",
+        abstract: abstract,
+        github_url: demoLink,
+        budget_needed: budget
+      };
+
+      if (!payload.lead_email) { alert('Enter a real contact email in the proposal form or your account profile.'); return; }
+      try {
+        const res = await fetch(`${API_BASE}/api/challenges/${encodeURIComponent(challengeId)}/proposals`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.token },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          alert(`🎉 ${data.message || 'Proposal submitted successfully!'}\nProposal ID: ${data.proposal_id || 'PROP-SUBMITTED'}\nOur Academic Review Board & CSR Partners will evaluate your solution.`);
+        } else { const data = await res.json().catch(() => ({})); throw new Error(data.detail || `Submission failed (${res.status}).`); }
+        closeModal('proposalModal'); document.getElementById('solutionProposalForm').reset();
+      } catch (err) { alert(err.message || 'Proposal was not saved.'); }
+    }
+
+    async function handleCsrSubmit(e) {
+      e.preventDefault();
+      const challengeId = document.getElementById('csrChallengeId').innerText;
+      let session; try { session = workflowSession('industry'); } catch (err) { alert(err.message); return; }
+      const company = (session.role === 'industry' ? session.organization : document.getElementById('csrCompany').value).trim();
+      if (!company) { alert('Your industry account must have an approved organization.'); return; }
+      const contact = document.getElementById('csrContact').value;
+      const supportType = document.getElementById('csrSupportType').value;
+      const amount = parseFloat(document.getElementById('csrAmount').value || '0');
+
+      const payload = {
+        challenge_id: challengeId,
+        company_name: company,
+        contact_name: contact,
+        contact_email: (document.getElementById('csrContactEmail')?.value || session.email || '').trim(),
+        csr_domain: supportType,
+        pledge_amount: amount,
+        resources_offered: supportType,
+        mentor_name: contact
+      };
+
+      if (!payload.contact_email) { alert('Enter a real contact email in the sponsorship form or your account profile.'); return; }
+      try {
+        const res = await fetch(`${API_BASE}/api/challenges/${encodeURIComponent(challengeId)}/sponsor`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.token },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          alert(`🤝 ${data.message || 'CSR sponsorship registered!'}\nThank you, ${company}! Your pledge of ₹${amount.toLocaleString('en-IN')} has been logged.`);
+        } else { const data = await res.json().catch(() => ({})); throw new Error(data.detail || `Sponsorship failed (${res.status}).`); }
+      } catch (err) { alert(err.message || 'Sponsorship was not saved.'); }
+
+      closeModal('csrModal');
+      document.getElementById('csrPledgeForm').reset();
+    }
+  </script>
+</body>
+</html>

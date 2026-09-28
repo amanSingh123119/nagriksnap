@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+python-multipart
+requests
+python-dotenv
+groq
+argon2-cffi
+boto3
+# Required only for the staged SQLite -> PostgreSQL migration utility.
+psycopg[binary]>=3.2,<4

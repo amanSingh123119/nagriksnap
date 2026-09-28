@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="NagrikSnap Industry & CSR Portal – Collaborate with government, universities and communities for a stronger and smarter society." />
+  <title>Industry Panel – NagrikSnap</title>
+
+  <!-- Google Fonts: Nunito & Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    /* ===== RESET & ROOT BRAND TOKENS ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --ns-blue: #0ea5e9;
+      --ns-blue-hover: #0284c7;
+      --ns-navy: #0e2a47;
+      --ns-navy-dark: #091e33;
+      --ns-purple: #8b5cf6;
+      --ns-teal: #14b8a6;
+      --ns-green: #22c55e;
+      --ns-orange: #f97316;
+      --ns-amber: #f59e0b;
+      --ns-red: #ef4444;
+      --ns-bg: #f5f8fc;
+      --ns-card-bg: #ffffff;
+      --ns-sidebar-bg: #ffffff;
+      --ns-border: #e2e8f0;
+      --ns-text-main: #1e293b;
+      --ns-text-muted: #64748b;
+      --ns-text-light: #94a3b8;
+      --ns-radius-lg: 16px;
+      --ns-radius-md: 12px;
+      --ns-radius-sm: 8px;
+      --ns-shadow-card: 0 4px 16px rgba(15, 23, 42, 0.04);
+      --ns-shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --ns-sidebar-width: 260px;
+      --ns-topbar-height: 70px;
+    }
+
+    body {
+      font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+      background: var(--ns-bg);
+      color: var(--ns-text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+    }
+
+    .app-layout {
+      display: flex;
+      width: 100vw;
+      min-height: 100vh;
+    }
+
+    /* ===== LEFT SIDEBAR ===== */
+    .sidebar {
+      width: var(--ns-sidebar-width);
+      background: var(--ns-sidebar-bg);
+      border-right: 1px solid var(--ns-border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+      transition: transform 0.25s ease;
+    }
+
+    .sidebar-header {
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--ns-border);
+      cursor: pointer;
+    }
+
+    .sidebar-industry-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.35rem;
+      box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--ns-navy);
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ns-text-muted);
+    }
+
+    /* Sidebar Nav Menu */
+    .sidebar-menu {
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: #475569;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      position: relative;
+      user-select: none;
+    }
+
+    .nav-item i:first-child {
+      font-size: 1.05rem;
+      width: 20px;
+      text-align: center;
+      color: #64748b;
+      transition: color 0.18s ease;
+    }
+
+    .nav-item .nav-text {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nav-item:hover {
+      background: #fff7ed;
+      color: #ea580c;
+    }
+
+    .nav-item:hover i:first-child {
+      color: #ea580c;
+    }
+
+    .nav-item.active {
+      background: #ffedd5;
+      color: #c2410c;
+      box-shadow: 0 4px 14px rgba(234, 88, 12, 0.15);
+    }
+
+    .nav-item.active i:first-child {
+      color: #ea580c;
+    }
+
+    .nav-item .badge-count {
+      background: #ef4444;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 999px;
+      line-height: 1;
+    }
+
+    /* Promo Card */
+    .sidebar-promo-card {
+      margin: 14px;
+      padding: 14px;
+      background: linear-gradient(135deg, #0e2a47, #0369a1);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 6px 18px rgba(14, 42, 71, 0.2);
+    }
+
+    .promo-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38bdf8;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .promo-text {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      line-height: 1.35;
+    }
+
+    /* ===== MAIN WRAPPER ===== */
+    .main-wrapper {
+      margin-left: var(--ns-sidebar-width);
+      width: calc(100% - var(--ns-sidebar-width));
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--ns-bg);
+      transition: margin-left 0.25s ease, width 0.25s ease;
+    }
+
+    /* Top Navigation Bar */
+    .topbar {
+      height: var(--ns-topbar-height);
+      background: #ffffff;
+      border-bottom: 1px solid var(--ns-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .hamburger-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--ns-navy);
+      cursor: pointer;
+      padding: 6px;
+    }
+
+    .topbar-brand-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .topbar-brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #0ea5e9, #f97316);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .topbar-brand-name {
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar-brand-name strong {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--ns-navy);
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+    .topbar-brand-name span {
+      font-size: 0.65rem;
+      color: var(--ns-text-light);
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .topbar-search {
+      position: relative;
+      max-width: 480px;
+      width: 100%;
+      margin-left: 20px;
+    }
+
+    .topbar-search input {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid var(--ns-border);
+      border-radius: 999px;
+      padding: 10px 18px 10px 42px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      color: var(--ns-text-main);
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .topbar-search input:focus {
+      background: #ffffff;
+      border-color: var(--ns-blue);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+    }
+
+    .topbar-search i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ns-text-light);
+      font-size: 0.9rem;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-notif-bell {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1px solid var(--ns-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .btn-notif-bell:hover {
+      background: #f1f5f9;
+      color: var(--ns-navy);
+    }
+
+    .notif-dot {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #ef4444;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+    }
+
+    .user-profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 12px 5px 6px;
+      background: #f8fafc;
+      border: 1px solid var(--ns-border);
+      border-radius: 999px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .user-profile-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .profile-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ea580c, #f97316);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .profile-name {
+      font-size: 0.84rem;
+      font-weight: 800;
+      color: var(--ns-navy);
+      line-height: 1.1;
+    }
+
+    .profile-role {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--ns-text-muted);
+    }
+
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 200px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--ns-border);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 120;
+    }
+
+    .profile-dropdown.show {
+      display: flex;
+    }
+
+    .dropdown-item {
+      padding: 10px 16px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--ns-text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .dropdown-item:hover {
+      background: #f8fafc;
+      color: var(--ns-blue);
+    }
+
+    .dropdown-item.logout {
+      border-top: 1px solid var(--ns-border);
+      color: #ef4444;
+    }
+
+    .dropdown-item.logout:hover {
+      background: #fef2f2;
+    }
+
+    /* ===== DASHBOARD VIEWPORT ===== */
+    .dashboard-viewport {
+      padding: 24px 28px 60px;
+      flex: 1;
+    }
+
+    .spa-view {
+      display: none;
+      animation: fadeIn 0.22s ease-in-out;
+    }
+
+    .spa-view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dashboard-body {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Welcome Header */
+    .welcome-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .welcome-text h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--ns-navy);
+      letter-spacing: -0.3px;
+    }
+
+    .welcome-text p {
+      font-size: 0.86rem;
+      color: var(--ns-text-muted);
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    .btn-explore-primary {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: var(--ns-radius-md);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+    }
+    .btn-explore-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(14, 165, 233, 0.45);
+    }
+
+    /* Row of 5 Stat Summary Cards */
+    .stats-row-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+
+    .stat-card-industry {
+      background: white;
+      border-radius: var(--ns-radius-md);
+      padding: 16px;
+      border: 1px solid var(--ns-border);
+      box-shadow: var(--ns-shadow-card);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .stat-card-industry:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+      border-color: #cbd5e1;
+    }
+
+    .stat-icon-industry {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .stat-icon-industry.blue { background: #e0f2fe; color: #0284c7; }
+    .stat-icon-industry.orange { background: #ffedd5; color: #ea580c; }
+    .stat-icon-industry.green { background: #dcfce7; color: #16a34a; }
+    .stat-icon-industry.purple { background: #f3e8ff; color: #8b5cf6; }
+    .stat-icon-industry.yellow { background: #fef3c7; color: #d97706; }
+
+    .stat-content-industry {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-number-industry {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--ns-navy);
+      line-height: 1.1;
+    }
+
+    .stat-label-industry {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ns-text-muted);
+    }
+
+    .stat-trend {
+      font-size: 0.68rem;
+      font-weight: 700;
+      margin-top: 2px;
+      color: #16a34a;
+    }
+
+    /* Middle Row: Recent Govt Tenders (60%) & Map (40%) */
+    .middle-tenders-map-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 18px;
+    }
+
+    .dash-panel {
+      background: white;
+      border-radius: var(--ns-radius-lg);
+      border: 1px solid var(--ns-border);
+      box-shadow: var(--ns-shadow-card);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .panel-header h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--ns-navy);
+    }
+
+    .link-btn {
+      color: var(--ns-blue);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: none;
+      background: none;
+    }
+    .link-btn:hover {
+      text-decoration: underline;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--ns-radius-md);
+      border: 1px solid #f1f5f9;
+    }
+
+    .industry-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.82rem;
+    }
+
+    .industry-table th {
+      background: #f8fafc;
+      color: var(--ns-text-muted);
+      font-weight: 700;
+      padding: 10px 12px;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-bottom: 1px solid var(--ns-border);
+    }
+
+    .industry-table td {
+      padding: 11px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--ns-text-main);
+      font-weight: 600;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+
+    .industry-table tr:hover td {
+      background: #fff7ed;
+    }
+
+    /* Status Pills */
+    .status-pill {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-pill.open { background: #dcfce7; color: #15803d; }
+    .status-pill.live { background: #e0f2fe; color: #0369a1; }
+    .status-pill.closing-soon { background: #ffedd5; color: #c2410c; }
+    .status-pill.upcoming { background: #cffafe; color: #0e7490; }
+    .status-pill.pending { background: #ffedd5; color: #c2410c; }
+    .status-pill.under-review { background: #e0f2fe; color: #0369a1; }
+    .status-pill.approved { background: #dcfce7; color: #15803d; }
+    .status-pill.in-progress { background: #e0f2fe; color: #0369a1; }
+    .status-pill.testing { background: #fef3c7; color: #b45309; }
+    .status-pill.planning { background: #ede9fe; color: #6d28d9; }
+
+    /* Map Box */
+    .collab-map-wrapper {
+      height: 255px;
+      border-radius: var(--ns-radius-md);
+      overflow: hidden;
+      border: 1px solid var(--ns-border);
+      position: relative;
+    }
+
+    #industryCollabMap, #industryFullGeoMap {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Map Legend Chips */
+    .map-legend-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .legend-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    .legend-dot-circ {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Middle-Bottom Split Row: Collaboration Requests (50%) & Ongoing Projects (50%) */
+    .split-collab-projects-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    /* Progress Bar */
+    .progress-track {
+      height: 8px;
+      background: #f1f5f9;
+      border-radius: 999px;
+      overflow: hidden;
+      width: 100px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    /* Bottom 3-Column Grid: CSR Initiatives, Quick Actions, Notifications */
+    .bottom-3col-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr 1.15fr;
+      gap: 18px;
+    }
+
+    /* CSR Initiatives Cards */
+    .csr-cards-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .csr-initiative-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .csr-initiative-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+      border-color: #cbd5e1;
+    }
+
+    .csr-card-banner {
+      height: 65px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    .csr-card-body {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .csr-card-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--ns-navy);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .csr-card-desc {
+      font-size: 0.72rem;
+      color: var(--ns-text-muted);
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    /* Quick Actions 4 Tiles */
+    .quick-actions-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .action-tile-industry {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .action-tile-industry:hover {
+      background: #ffffff;
+      border-color: var(--ns-blue);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.15);
+    }
+
+    .action-tile-icon {
+      font-size: 1.35rem;
+      color: var(--ns-blue);
+    }
+
+    .action-tile-label {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--ns-navy);
+      line-height: 1.2;
+    }
+
+    .action-tile-sub {
+      font-size: 0.65rem;
+      color: var(--ns-text-muted);
+    }
+
+    /* Notifications Feed */
+    .notif-feed-industry {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .notif-item-industry {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .notif-item-industry:last-child { border-bottom: none; }
+
+    .notif-circle-industry {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+    .notif-circle-industry.blue { background: #e0f2fe; color: #0284c7; }
+    .notif-circle-industry.green { background: #dcfce7; color: #16a34a; }
+    .notif-circle-industry.orange { background: #ffedd5; color: #ea580c; }
+    .notif-circle-industry.purple { background: #f3e8ff; color: #8b5cf6; }
+
+    .notif-text-industry {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--ns-text-main);
+      line-height: 1.3;
+    }
+    .notif-text-industry small {
+      display: block;
+      font-size: 0.68rem;
+      color: var(--ns-text-light);
+    }
+
+    /* Modal Overlays */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+
+    .modal-card {
+      background: white;
+      border-radius: var(--ns-radius-lg);
+      max-width: 620px;
+      width: 100%;
+      padding: 26px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 18px; right: 18px;
+      background: #f1f5f9;
+      border: none;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ns-text-muted);
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--ns-border);
+      font-family: inherit;
+      font-size: 0.85rem;
+      color: var(--ns-text-main);
+      outline: none;
+    }
+    .input-field:focus {
+      border-color: var(--ns-blue);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+    }
+
+    /* Mobile Drawer */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 95;
+      display: none;
+    }
+
+    /* ===== RESPONSIVE MEDIA QUERIES ===== */
+    @media (max-width: 1200px) {
+      .stats-row-5 { grid-template-columns: repeat(3, 1fr); }
+      .middle-tenders-map-grid { grid-template-columns: 1fr; }
+      .split-collab-projects-grid { grid-template-columns: 1fr; }
+      .bottom-3col-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 860px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .sidebar-overlay.open {
+        display: block;
+      }
+      .main-wrapper {
+        margin-left: 0;
+        width: 100%;
+      }
+      .hamburger-btn {
+        display: block;
+      }
+      .stats-row-5 { grid-template-columns: repeat(2, 1fr); }
+      .csr-cards-row { grid-template-columns: 1fr; }
+      .topbar-search { display: none; }
+    }
+
+    @media (max-width: 520px) {
+      .stats-row-5 { grid-template-columns: 1fr; }
+      .quick-actions-4 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarMobile()"></div>
+
+    <!-- ===== LEFT SIDEBAR ===== -->
+    <aside class="sidebar" id="appSidebar">
+      <!-- Industry Brand Header -->
+      <div class="sidebar-header" onclick="switchIndustryView('dashboard')">
+        <div class="sidebar-industry-icon">
+          <i class="fas fa-industry"></i>
+        </div>
+        <div class="sidebar-brand-text">
+          <div class="brand-title">Industry Panel</div>
+          <div class="brand-subtitle" id="sideCompanyName">TechNova Solutions Ltd.</div>
+        </div>
+      </div>
+
+      <!-- Navigation Menu (14 items matching screenshot) -->
+      <nav class="sidebar-menu">
+        <div class="nav-item active" id="nav-dashboard" onclick="switchIndustryView('dashboard')" title="Dashboard">
+          <i class="fas fa-th-large"></i>
+          <span class="nav-text">Dashboard</span>
+        </div>
+
+        <div class="nav-item" id="nav-tenders" onclick="switchIndustryView('tenders')" title="Government Tenders">
+          <i class="fas fa-file-contract"></i>
+          <span class="nav-text">Government Tenders</span>
+        </div>
+
+        <div class="nav-item" id="nav-opportunities" onclick="switchIndustryView('opportunities')" title="Collaboration Opportunities">
+          <i class="fas fa-hands-helping"></i>
+          <span class="nav-text">Collaboration Opportunities</span>
+        </div>
+
+        <div class="nav-item" id="nav-projects" onclick="switchIndustryView('projects')" title="Ongoing Projects">
+          <i class="fas fa-tasks"></i>
+          <span class="nav-text">Ongoing Projects</span>
+        </div>
+
+        <div class="nav-item" id="nav-csr" onclick="switchIndustryView('csr')" title="CSR Initiatives">
+          <i class="fas fa-leaf"></i>
+          <span class="nav-text">CSR Initiatives</span>
+        </div>
+
+        <div class="nav-item" id="nav-issues" onclick="switchIndustryView('issues')" title="Issue Support">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span class="nav-text">Issue Support</span>
+        </div>
+
+        <div class="nav-item" id="nav-partnerships" onclick="switchIndustryView('partnerships')" title="Partnership Requests">
+          <i class="fas fa-handshake"></i>
+          <span class="nav-text">Partnership Requests</span>
+        </div>
+
+        <div class="nav-item" id="nav-events" onclick="switchIndustryView('events')" title="Events & Hackathons">
+          <i class="fas fa-calendar-alt"></i>
+          <span class="nav-text">Events & Hackathons</span>
+        </div>
+
+        <div class="nav-item" id="nav-reports" onclick="switchIndustryView('reports')" title="Reports & Impact">
+          <i class="fas fa-chart-line"></i>
+          <span class="nav-text">Reports & Impact</span>
+        </div>
+
+        <div class="nav-item" id="nav-notifications" onclick="switchIndustryView('notifications')" title="Notifications">
+          <i class="fas fa-bell"></i>
+          <span class="nav-text">Notifications</span>
+          <span class="badge-count" id="sidebarBadgeCount">3</span>
+        </div>
+
+        <div class="nav-item" id="nav-profile" onclick="switchIndustryView('profile')" title="Company Profile">
+          <i class="fas fa-building"></i>
+          <span class="nav-text">Company Profile</span>
+        </div>
+
+        <div class="nav-item" id="nav-team" onclick="switchIndustryView('team')" title="Team Management">
+          <i class="fas fa-users"></i>
+          <span class="nav-text">Team Management</span>
+        </div>
+
+        <div class="nav-item" id="nav-settings" onclick="switchIndustryView('settings')" title="Settings">
+          <i class="fas fa-cog"></i>
+          <span class="nav-text">Settings</span>
+        </div>
+
+        <div class="nav-item" id="nav-help" onclick="switchIndustryView('help')" title="Help & Support">
+          <i class="fas fa-question-circle"></i>
+          <span class="nav-text">Help & Support</span>
+        </div>
+      </nav>
+
+      <!-- Bottom Promo Card -->
+      <div class="sidebar-promo-card">
+        <div class="promo-thumb">
+          <i class="fas fa-city"></i>
+        </div>
+        <div class="promo-text">
+          Partnering for a<br>Sustainable and Inclusive<br><strong>Tomorrow</strong>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT WRAPPER ===== -->
+    <main class="main-wrapper">
+      
+      <!-- Top Navigation Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger-btn" onclick="toggleSidebarMobile()" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+          </button>
+
+          <!-- NagrikSnap Logo Chip -->
+          <div class="topbar-brand-chip" onclick="switchIndustryView('dashboard')">
+            <div class="topbar-brand-logo">
+              <i class="fas fa-atom"></i>
+            </div>
+            <div class="topbar-brand-name">
+              <strong>NagrikSnap</strong>
+              <span>People • Problems • Partnerships • Progress</span>
+            </div>
+          </div>
+
+          <div class="topbar-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="industrySearchInput" placeholder="Search issues, opportunities, projects, tenders, or locations..." oninput="handleIndustrySearch(this.value)" />
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="btn-notif-bell" onclick="switchIndustryView('notifications')" title="Notifications">
+            <i class="far fa-bell"></i>
+            <span class="notif-dot" id="bellNotifDot">3</span>
+          </div>
+
+          <!-- User Profile Pill -->
+          <div class="user-profile-btn" id="userProfileBtn" onclick="toggleProfileDropdown()">
+            <div class="profile-avatar" id="headerAvatar">AV</div>
+            <div class="profile-info">
+              <span class="profile-name" id="headerUserName">Amit Verma</span>
+              <span class="profile-role">Industry Representative</span>
+            </div>
+            <i class="fas fa-chevron-down" style="font-size:0.75rem;color:#94a3b8;"></i>
+
+            <div class="profile-dropdown" id="profileDropdown">
+              <div class="dropdown-item" onclick="switchIndustryView('profile')">
+                <i class="fas fa-building"></i> Company Profile
+              </div>
+              <div class="dropdown-item" onclick="switchIndustryView('csr')">
+                <i class="fas fa-leaf"></i> CSR Initiatives
+              </div>
+              <div class="dropdown-item logout" onclick="industryLogout()">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ===== SINGLE PAGE APPLICATION VIEWPORT ===== -->
+      <div class="dashboard-viewport">
+
+        <!-- ========================================== -->
+        <!-- VIEW 1: MAIN INDUSTRY DASHBOARD            -->
+        <!-- ========================================== -->
+        <section class="spa-view active" id="view-dashboard">
+          <div class="dashboard-body">
+
+            <!-- Welcome Header Banner -->
+            <div class="welcome-header">
+              <div class="welcome-text">
+                <h1 id="welcomeTitle">Welcome, Amit Verma 🏭</h1>
+                <p>Collaborate with government, universities and communities for a stronger and smarter society.</p>
+              </div>
+              <button type="button" class="btn-explore-primary" onclick="openExploreModal()">
+                <i class="fas fa-plus"></i> Explore Opportunities
+              </button>
+            </div>
+
+            <!-- Row of 5 Stat Summary Cards -->
+            <div class="stats-row-5">
+              <!-- Active Tenders -->
+              <div class="stat-card-industry" onclick="switchIndustryView('tenders')">
+                <div class="stat-icon-industry blue"><i class="fas fa-file-contract"></i></div>
+                <div class="stat-content-industry">
+                  <span class="stat-number-industry">12</span>
+                  <span class="stat-label-industry">Active Tenders</span>
+                  <span class="stat-trend">↑ 20% from last month</span>
+                </div>
+              </div>
+
+              <!-- Collaboration Requests -->
+              <div class="stat-card-industry" onclick="switchIndustryView('partnerships')">
+                <div class="stat-icon-industry orange"><i class="fas fa-handshake"></i></div>
+                <div class="stat-content-industry">
+                  <span class="stat-number-industry">6</span>
+                  <span class="stat-label-industry">Collaboration Requests</span>
+                  <span class="stat-trend">↑ 50% from last month</span>
+                </div>
+              </div>
+
+              <!-- Ongoing Projects -->
+              <div class="stat-card-industry" onclick="switchIndustryView('projects')">
+                <div class="stat-icon-industry green"><i class="fas fa-tasks"></i></div>
+                <div class="stat-content-industry">
+                  <span class="stat-number-industry">4</span>
+                  <span class="stat-label-industry">Ongoing Projects</span>
+                  <span class="stat-trend">↑ 33% from last month</span>
+                </div>
+              </div>
+
+              <!-- CSR Initiatives -->
+              <div class="stat-card-industry" onclick="switchIndustryView('csr')">
+                <div class="stat-icon-industry purple"><i class="fas fa-leaf"></i></div>
+                <div class="stat-content-industry">
+                  <span class="stat-number-industry">3</span>
+                  <span class="stat-label-industry">CSR Initiatives</span>
+                  <span class="stat-trend">↑ 0% from last month</span>
+                </div>
+              </div>
+
+              <!-- Innovation Opportunities -->
+              <div class="stat-card-industry" onclick="switchIndustryView('opportunities')">
+                <div class="stat-icon-industry yellow"><i class="fas fa-lightbulb"></i></div>
+                <div class="stat-content-industry">
+                  <span class="stat-number-industry">8</span>
+                  <span class="stat-label-industry">Innovation Opportunities</span>
+                  <span class="stat-trend">↑ 60% from last month</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Middle Row: Recent Govt Tenders (60%) & Map (40%) -->
+            <div class="middle-tenders-map-grid">
+              
+              <!-- Recent Government Tenders Table -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>Recent Government Tenders</h2>
+                  <button class="link-btn" onclick="switchIndustryView('tenders')">View All →</button>
+                </div>
+                <div class="table-container">
+                  <table class="industry-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Tender Title</th>
+                        <th>Department</th>
+                        <th>Location</th>
+                        <th>Last Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="industryRecentTendersTbody">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Collaboration Map -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>Collaboration Map</h2>
+                  <button class="link-btn" onclick="switchIndustryView('map-view')">View Full Map →</button>
+                </div>
+                <div class="collab-map-wrapper">
+                  <div id="industryCollabMap"></div>
+                </div>
+                <div class="map-legend-pills">
+                  <div class="legend-chip"><span class="legend-dot-circ" style="background:#0ea5e9;"></span> Government Projects</div>
+                  <div class="legend-chip"><span class="legend-dot-circ" style="background:#16a34a;"></span> University Collaborations</div>
+                  <div class="legend-chip"><span class="legend-dot-circ" style="background:#ea580c;"></span> CSR Initiatives</div>
+                  <div class="legend-chip"><span class="legend-dot-circ" style="background:#8b5cf6;"></span> Innovation Hubs</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Middle-Bottom Split Row: Collaboration Requests (50%) & Ongoing Projects (50%) -->
+            <div class="split-collab-projects-grid">
+              
+              <!-- Collaboration Requests Table -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>Collaboration Requests</h2>
+                  <button class="link-btn" onclick="switchIndustryView('partnerships')">View All →</button>
+                </div>
+                <div class="table-container">
+                  <table class="industry-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>From</th>
+                        <th>Type</th>
+                        <th>Purpose</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr onclick="openCollabDetail('Parul University', 'Research Partnership', 'AI for Smart City')">
+                        <td>1</td>
+                        <td><strong>Parul University</strong></td>
+                        <td>Research Partnership</td>
+                        <td>AI for Smart City</td>
+                        <td>22 Sep 2026</td>
+                        <td><span class="status-pill pending">Pending</span></td>
+                        <td><button class="link-btn">View</button></td>
+                      </tr>
+                      <tr onclick="openCollabDetail('Gujarat Govt.', 'Implementation', 'CCTV Analytics')">
+                        <td>2</td>
+                        <td><strong>Gujarat Govt.</strong></td>
+                        <td>Implementation</td>
+                        <td>CCTV Analytics</td>
+                        <td>20 Sep 2026</td>
+                        <td><span class="status-pill under-review">Under Review</span></td>
+                        <td><button class="link-btn">View</button></td>
+                      </tr>
+                      <tr onclick="openCollabDetail('MSU Vadodara', 'Internship Program', 'Student Training')">
+                        <td>3</td>
+                        <td><strong>MSU Vadodara</strong></td>
+                        <td>Internship Program</td>
+                        <td>Student Training</td>
+                        <td>18 Sep 2026</td>
+                        <td><span class="status-pill approved">Approved</span></td>
+                        <td><button class="link-btn">View</button></td>
+                      </tr>
+                      <tr onclick="openCollabDetail('NGO - Clean City', 'CSR Collaboration', 'Waste Awareness')">
+                        <td>4</td>
+                        <td><strong>NGO - Clean City</strong></td>
+                        <td>CSR Collaboration</td>
+                        <td>Waste Awareness</td>
+                        <td>15 Sep 2026</td>
+                        <td><span class="status-pill pending">Pending</span></td>
+                        <td><button class="link-btn">View</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Ongoing Projects Table -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>Ongoing Projects</h2>
+                  <button class="link-btn" onclick="switchIndustryView('projects')">View All →</button>
+                </div>
+                <div class="table-container">
+                  <table class="industry-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Project Title</th>
+                        <th>Partner</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>1</td>
+                        <td><strong>Smart Waste Monitoring</strong></td>
+                        <td>Vadodara Muni.</td>
+                        <td>Vadodara</td>
+                        <td><span class="status-pill in-progress">In Progress</span></td>
+                        <td>
+                          <div class="progress-track"><div class="progress-fill" style="width:60%;background:#0ea5e9;"></div></div>
+                          <strong>60%</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td><strong>Surveillance Analytics</strong></td>
+                        <td>Home Dept.</td>
+                        <td>Gujarat</td>
+                        <td><span class="status-pill in-progress">In Progress</span></td>
+                        <td>
+                          <div class="progress-track"><div class="progress-fill" style="width:45%;background:#14b8a6;"></div></div>
+                          <strong>45%</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>3</td>
+                        <td><strong>Campus Energy Management</strong></td>
+                        <td>Parul University</td>
+                        <td>Vadodara</td>
+                        <td><span class="status-pill testing">Testing</span></td>
+                        <td>
+                          <div class="progress-track"><div class="progress-fill" style="width:80%;background:#f97316;"></div></div>
+                          <strong>80%</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>4</td>
+                        <td><strong>Water Quality Sensors</strong></td>
+                        <td>Water Dept.</td>
+                        <td>Gujarat</td>
+                        <td><span class="status-pill planning">Planning</span></td>
+                        <td>
+                          <div class="progress-track"><div class="progress-fill" style="width:30%;background:#8b5cf6;"></div></div>
+                          <strong>30%</strong>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Bottom Row: CSR Initiatives (35%), Quick Actions (30%), Recent Notifications (35%) -->
+            <div class="bottom-3col-grid">
+              
+              <!-- 1. CSR Initiatives -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>CSR Initiatives</h2>
+                  <button class="link-btn" onclick="switchIndustryView('csr')">View All →</button>
+                </div>
+                <div class="csr-cards-row">
+                  <!-- Card 1 -->
+                  <div class="csr-initiative-card" onclick="openCsrDetail('Clean City Drive', 'Ongoing', 'Tree plantation and cleanliness awareness in Vadodara.')">
+                    <div class="csr-card-banner" style="background:linear-gradient(135deg, #10b981, #047857);display:flex;align-items:center;justify-content:center;color:white;font-size:1.6rem;">
+                      <i class="fas fa-tree"></i>
+                    </div>
+                    <div class="csr-card-body">
+                      <div class="csr-card-title">
+                        <i class="fas fa-leaf" style="color:#16a34a;font-size:0.75rem;"></i> Clean City Drive
+                      </div>
+                      <p class="csr-card-desc">Tree plantation and cleanliness awareness in Vadodara.</p>
+                      <div><span class="status-pill open">Ongoing</span></div>
+                    </div>
+                  </div>
+
+                  <!-- Card 2 -->
+                  <div class="csr-initiative-card" onclick="openCsrDetail('Digital Learning Support', 'Ongoing', 'Provide digital devices to underprivileged students.')">
+                    <div class="csr-card-banner" style="background:linear-gradient(135deg, #6366f1, #4338ca);display:flex;align-items:center;justify-content:center;color:white;font-size:1.6rem;">
+                      <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <div class="csr-card-body">
+                      <div class="csr-card-title">
+                        <i class="fas fa-graduation-cap" style="color:#8b5cf6;font-size:0.75rem;"></i> Digital Learning
+                      </div>
+                      <p class="csr-card-desc">Provide digital devices to underprivileged students.</p>
+                      <div><span class="status-pill open">Ongoing</span></div>
+                    </div>
+                  </div>
+
+                  <!-- Card 3 -->
+                  <div class="csr-initiative-card" onclick="openCsrDetail('Save Water Campaign', 'Planning', 'Awareness and IoT based water monitoring support.')">
+                    <div class="csr-card-banner" style="background:linear-gradient(135deg, #0ea5e9, #0369a1);display:flex;align-items:center;justify-content:center;color:white;font-size:1.6rem;">
+                      <i class="fas fa-tint"></i>
+                    </div>
+                    <div class="csr-card-body">
+                      <div class="csr-card-title">
+                        <i class="fas fa-water" style="color:#0ea5e9;font-size:0.75rem;"></i> Save Water
+                      </div>
+                      <p class="csr-card-desc">Awareness and IoT based water monitoring support.</p>
+                      <div><span class="status-pill planning">Planning</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Industry Quick Actions (4 Tiles) -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>Industry Quick Actions</h2>
+                </div>
+                <div class="quick-actions-4">
+                  <div class="action-tile-industry" onclick="switchIndustryView('tenders')">
+                    <i class="fas fa-search-dollar action-tile-icon"></i>
+                    <span class="action-tile-label">Browse Tenders</span>
+                    <span class="action-tile-sub">Find & apply tenders</span>
+                  </div>
+                  <div class="action-tile-industry" onclick="openExploreModal()">
+                    <i class="fas fa-hands-helping action-tile-icon"></i>
+                    <span class="action-tile-label">Request Collaboration</span>
+                    <span class="action-tile-sub">Partner with univs & govt</span>
+                  </div>
+                  <div class="action-tile-industry" onclick="switchIndustryView('csr')">
+                    <i class="fas fa-hand-holding-heart action-tile-icon"></i>
+                    <span class="action-tile-label">Post CSR Initiative</span>
+                    <span class="action-tile-sub">Support social causes</span>
+                  </div>
+                  <div class="action-tile-industry" onclick="switchIndustryView('reports')">
+                    <i class="fas fa-chart-pie action-tile-icon"></i>
+                    <span class="action-tile-label">View Reports</span>
+                    <span class="action-tile-sub">Track impact & ESG</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Recent Notifications -->
+              <div class="dash-panel">
+                <div class="panel-header">
+                  <h2>Recent Notifications</h2>
+                  <button class="link-btn" onclick="switchIndustryView('notifications')">View All →</button>
+                </div>
+                <div class="notif-feed-industry">
+                  <div class="notif-item-industry">
+                    <div class="notif-circle-industry blue"><i class="fas fa-file-contract"></i></div>
+                    <div class="notif-text-industry">
+                      New tender published: Smart Street Lighting System
+                      <small>2 hours ago</small>
+                    </div>
+                  </div>
+                  <div class="notif-item-industry">
+                    <div class="notif-circle-industry green"><i class="fas fa-check-circle"></i></div>
+                    <div class="notif-text-industry">
+                      Your collaboration request with Parul University has been approved.
+                      <small>1 day ago</small>
+                    </div>
+                  </div>
+                  <div class="notif-item-industry">
+                    <div class="notif-circle-industry orange"><i class="fas fa-clock"></i></div>
+                    <div class="notif-text-industry">
+                      Reminder: Submit proposal for CCTV Analytics tender (last date 15 Oct 2026).
+                      <small>2 days ago</small>
+                    </div>
+                  </div>
+                  <div class="notif-item-industry">
+                    <div class="notif-circle-industry purple"><i class="fas fa-calendar-check"></i></div>
+                    <div class="notif-text-industry">
+                      New event: Industry – University Collaboration Meet
+                      <small>3 days ago</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 2: GOVERNMENT TENDERS MARKETPLACE     -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-tenders">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Government Municipal & Smart City Tenders</h2>
+                <p style="font-size:0.84rem;color:var(--ns-text-muted);">Browse tenders eligible for corporate consortium and technical bids.</p>
+              </div>
+              <button class="btn-explore-primary" onclick="alert('Proposal submission portal initialized.')"><i class="fas fa-file-upload"></i> Submit Direct Bid</button>
+            </div>
+            <div class="table-container">
+              <table class="industry-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Tender Title</th>
+                    <th>Department</th>
+                    <th>Location</th>
+                    <th>Last Date</th>
+                    <th>Budget Estimate</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="industryAllTendersTbody">
+                  <!-- Populated via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 3: COLLABORATION OPPORTUNITIES        -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-opportunities">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <div>
+                <h2>University & Academic Innovation Problem Statements</h2>
+                <p style="font-size:0.84rem;color:var(--ns-text-muted);">Collaborative municipal problem statements and R&D co-sponsorships.</p>
+              </div>
+              <button class="btn-explore-primary" onclick="openExploreModal()"><i class="fas fa-plus"></i> Co-Sponsor Problem</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px;">
+              <div style="background:#f8fafc;padding:18px;border-radius:12px;border:1px solid #e2e8f0;">
+                <span class="status-pill open">Open for Co-Sponsor</span>
+                <h3 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.05rem;margin:8px 0;">Acoustic Water Pipeline Leakage Sensor</h3>
+                <p style="font-size:0.82rem;color:var(--ns-text-muted);">Parul University engineering team seeking CSR prototype seed grant (₹ 1,50,000).</p>
+                <div style="margin-top:12px;"><button class="btn-explore-primary" style="padding:6px 14px;font-size:0.78rem;" onclick="alert('Pledged CSR co-sponsorship for Acoustic Sensor project!')">Sponsor Prototype</button></div>
+              </div>
+              <div style="background:#f8fafc;padding:18px;border-radius:12px;border:1px solid #e2e8f0;">
+                <span class="status-pill open">Open for Co-Sponsor</span>
+                <h3 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.05rem;margin:8px 0;">Solar Microgrid Cold Storage for Mandis</h3>
+                <p style="font-size:0.82rem;color:var(--ns-text-muted);">MSU Baroda renewable energy lab pilot for rural agricultural produce preservation.</p>
+                <div style="margin-top:12px;"><button class="btn-explore-primary" style="padding:6px 14px;font-size:0.78rem;" onclick="alert('Pledged CSR co-sponsorship for Solar Cold Storage!')">Sponsor Prototype</button></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 4: ONGOING PROJECTS TRACKER           -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-projects">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <h2>Active Pilot & Implementation Projects</h2>
+            </div>
+            <div class="table-container">
+              <table class="industry-table">
+                <thead>
+                  <tr>
+                    <th>Project Name</th>
+                    <th>Partner Institution</th>
+                    <th>Assigned Lead</th>
+                    <th>Milestone Stage</th>
+                    <th>Status</th>
+                    <th>Completion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Smart Waste Monitoring</strong></td>
+                    <td>Vadodara Municipal Corp</td>
+                    <td>Er. Saurabh Jain</td>
+                    <td>Phase 2: IoT Sensors Deployed</td>
+                    <td><span class="status-pill in-progress">In Progress</span></td>
+                    <td>60%</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Surveillance Analytics</strong></td>
+                    <td>Gujarat Home Dept.</td>
+                    <td>Pooja Rao</td>
+                    <td>Phase 1: Edge Camera Setup</td>
+                    <td><span class="status-pill in-progress">In Progress</span></td>
+                    <td>45%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 5: CSR INITIATIVES                    -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-csr">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Corporate Social Responsibility Portfolio</h2>
+                <p style="font-size:0.84rem;color:var(--ns-text-muted);">TechNova Solutions Ltd. annual CSR deployment: ₹ 45,00,000.</p>
+              </div>
+              <button class="btn-explore-primary" onclick="alert('Create New CSR Initiative form opened!')"><i class="fas fa-plus"></i> Launch New CSR Drive</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
+              <div style="background:#f8fafc;padding:18px;border-radius:12px;border:1px solid #e2e8f0;">
+                <h3 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.05rem;">Clean City Drive</h3>
+                <p style="font-size:0.82rem;color:var(--ns-text-muted);margin:6px 0 10px;">Planting 10,000 indigenous trees across Vadodara Industrial Belt.</p>
+                <div style="font-size:0.8rem;font-weight:700;color:#16a34a;">Status: Ongoing • 4,200 planted</div>
+              </div>
+              <div style="background:#f8fafc;padding:18px;border-radius:12px;border:1px solid #e2e8f0;">
+                <h3 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.05rem;">Digital Learning Support</h3>
+                <p style="font-size:0.82rem;color:var(--ns-text-muted);margin:6px 0 10px;">Smart digital tablets distributed to 30 municipal schools.</p>
+                <div style="font-size:0.8rem;font-weight:700;color:#16a34a;">Status: Ongoing • 450 tablets active</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 6: ISSUE SUPPORT                      -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-issues">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <h2>Civic Grievances Requiring Industry Tech Support</h2>
+            </div>
+            <p style="font-size:0.84rem;color:var(--ns-text-muted);margin-bottom:14px;">High-priority civic infrastructure challenges where corporate technology or CSR equipment can be deployed.</p>
+            <div class="table-container">
+              <table class="industry-table">
+                <thead>
+                  <tr>
+                    <th>Grievance ID</th>
+                    <th>Title</th>
+                    <th>Location</th>
+                    <th>Required Solution</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>TKT-991</td>
+                    <td>Severe Water Logging on Underpass</td>
+                    <td>Makarpura Industrial Gate</td>
+                    <td>High-Capacity Automated Dewatering Pumps</td>
+                    <td><button class="btn-explore-primary" style="padding:5px 12px;font-size:0.75rem;" onclick="alert('Tech assistance offer sent to municipal engineer!')">Provide Pumps</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 7: PARTNERSHIP REQUESTS               -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-partnerships">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <h2>Inbound Academic & NGO Partnership Requests</h2>
+            </div>
+            <div class="table-container">
+              <table class="industry-table">
+                <thead>
+                  <tr>
+                    <th>Organization</th>
+                    <th>Request Category</th>
+                    <th>Proposed Scope</th>
+                    <th>Date Received</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Parul University</strong></td>
+                    <td>Research Partnership</td>
+                    <td>AI for Smart City Civic Automation</td>
+                    <td>22 Sep 2026</td>
+                    <td><button class="btn-explore-primary" style="padding:5px 12px;font-size:0.75rem;" onclick="alert('Partnership accepted!')">Approve</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 8: EVENTS & HACKATHONS                -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-events">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <h2>Hackathons, Demo Days & Industry Conclaves</h2>
+            </div>
+            <div style="background:#f8fafc;padding:18px;border-radius:12px;border-left:4px solid var(--ns-orange);">
+              <span class="status-pill open">Innovation Partner</span>
+              <h3 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.1rem;margin:6px 0;">National Civic Tech & Sustainability Innovation Conclave</h3>
+              <p style="font-size:0.84rem;color:var(--ns-text-muted);">Evaluating cutting-edge student and startup innovations solving civic challenges.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 9: REPORTS & IMPACT                   -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-reports">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <h2>CSR Impact & ESG Sustainability Audit</h2>
+              <button class="btn-explore-primary" onclick="window.print()"><i class="fas fa-file-pdf"></i> Export ESG Report (PDF)</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+              <div style="background:#f8fafc;padding:20px;border-radius:12px;">
+                <h4>Total Beneficiaries Impacted</h4>
+                <div style="font-size:2rem;font-weight:800;color:#16a34a;margin:6px 0;">18,450 Citizens</div>
+                <small style="color:var(--ns-text-muted);">Clean water, smart streetlights, educational tablets</small>
+              </div>
+              <div style="background:#f8fafc;padding:20px;border-radius:12px;">
+                <h4>CSR Fund Utilization</h4>
+                <div style="font-size:2rem;font-weight:800;color:var(--ns-orange);margin:6px 0;">86.4%</div>
+                <small style="color:var(--ns-text-muted);">Audited by Statutory CSR Committee</small>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 10: NOTIFICATIONS                     -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-notifications">
+          <div class="dash-panel" style="max-width:800px;margin:0 auto;">
+            <div class="panel-header">
+              <h2>Notifications & Tender Alerts</h2>
+              <button class="link-btn" onclick="clearIndustryNotifs()"><i class="fas fa-check-double"></i> Mark All Read</button>
+            </div>
+            <div class="notif-feed-industry" style="gap:16px;">
+              <div class="notif-item-industry">
+                <div class="notif-circle-industry blue"><i class="fas fa-file-contract"></i></div>
+                <div class="notif-text-industry">
+                  New tender published: Smart Street Lighting System
+                  <small>2 hours ago</small>
+                </div>
+              </div>
+              <div class="notif-item-industry">
+                <div class="notif-circle-industry green"><i class="fas fa-check-circle"></i></div>
+                <div class="notif-text-industry">
+                  Your collaboration request with Parul University has been approved.
+                  <small>1 day ago</small>
+                </div>
+              </div>
+              <div class="notif-item-industry">
+                <div class="notif-circle-industry orange"><i class="fas fa-clock"></i></div>
+                <div class="notif-text-industry">
+                  Reminder: Submit proposal for CCTV Analytics tender (last date 15 Oct 2026).
+                  <small>2 days ago</small>
+                </div>
+              </div>
+              <div class="notif-item-industry">
+                <div class="notif-circle-industry purple"><i class="fas fa-calendar-check"></i></div>
+                <div class="notif-text-industry">
+                  New event: Industry – University Collaboration Meet
+                  <small>3 days ago</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 11: COMPANY PROFILE                   -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-profile">
+          <div class="dash-panel" style="max-width:680px;margin:0 auto;">
+            <div class="panel-header">
+              <h2>Corporate & CSR Profile</h2>
+            </div>
+            <form onsubmit="saveCompanyProfile(event)">
+              <div style="margin-bottom:12px;">
+                <label style="font-weight:700;font-size:0.8rem;color:var(--ns-navy);display:block;margin-bottom:4px;">Company Legal Name</label>
+                <input type="text" class="input-field" value="TechNova Solutions Ltd." required />
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="font-weight:700;font-size:0.8rem;color:var(--ns-navy);display:block;margin-bottom:4px;">Industry Representative Name</label>
+                <input type="text" id="repNameInput" class="input-field" value="Amit Verma" required />
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="font-weight:700;font-size:0.8rem;color:var(--ns-navy);display:block;margin-bottom:4px;">Corporate Email</label>
+                <input type="email" class="input-field" value="demo.industry@example.test" required />
+              </div>
+              <div style="margin-bottom:16px;">
+                <label style="font-weight:700;font-size:0.8rem;color:var(--ns-navy);display:block;margin-bottom:4px;">Annual CSR Budget Commitment</label>
+                <input type="text" class="input-field" value="₹ 45,00,000" required />
+              </div>
+              <button type="submit" class="btn-explore-primary"><i class="fas fa-save"></i> Save Profile Details</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 12: TEAM MANAGEMENT                   -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-team">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <h2>CSR & Government Relations Team</h2>
+              <button class="btn-explore-primary" onclick="alert('Add team member dialog')"><i class="fas fa-user-plus"></i> Invite Team Member</button>
+            </div>
+            <div class="table-container">
+              <table class="industry-table">
+                <thead>
+                  <tr>
+                    <th>Member Name</th>
+                    <th>Role</th>
+                    <th>Email</th>
+                    <th>Assigned Projects</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Amit Verma</strong></td>
+                    <td>Head of CSR & Smart City Partnerships</td>
+                    <td>demo.industry@example.test</td>
+                    <td>4 Projects</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Pooja Rao</strong></td>
+                    <td>Senior IoT Solutions Architect</td>
+                    <td>pooja@technova.com</td>
+                    <td>Surveillance Analytics</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 13: SETTINGS                          -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-settings">
+          <div class="dash-panel" style="max-width:650px;margin:0 auto;">
+            <div class="panel-header">
+              <h2>Partner Portal Preferences</h2>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <label style="display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:700;color:var(--ns-navy);">
+                <input type="checkbox" checked style="width:16px;height:16px;" /> Instant SMS notifications for matching government tenders
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;font-size:0.85rem;font-weight:700;color:var(--ns-navy);">
+                <input type="checkbox" checked style="width:16px;height:16px;" /> Notify on student hackathon team mentorship requests
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 14: HELP & SUPPORT                    -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-help">
+          <div class="dash-panel" style="max-width:700px;margin:0 auto;">
+            <div class="panel-header">
+              <h2>Industry Partner Helpdesk</h2>
+            </div>
+            <div style="background:#f8fafc;padding:18px;border-radius:12px;border:1px solid #e2e8f0;">
+              <h4>Dedicated Nodal Desk: Vadodara Smart City</h4>
+              <p style="font-size:0.84rem;color:var(--ns-text-muted);margin:6px 0;">Direct Hotline: +91 265 2433111 • Email: csr-desk@vadodara.gov.in</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 15: FULL COLLABORATION MAP EXPANDED   -->
+        <!-- ========================================== -->
+        <section class="spa-view" id="view-map-view">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <h2>Metropolitan Quadruple Helix Collaboration Geo-Map</h2>
+              <button class="btn-explore-primary" onclick="switchIndustryView('dashboard')"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+            </div>
+            <div style="height:550px;border-radius:12px;overflow:hidden;border:1px solid var(--ns-border);">
+              <div id="industryFullGeoMap"></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== TENDER DETAIL / BID PROPOSAL MODAL ===== -->
+  <div class="modal-overlay" id="tenderDetailModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('tenderDetailModal')"><i class="fas fa-times"></i></button>
+      
+      <div>
+        <span style="font-size:0.75rem;color:var(--ns-blue);font-weight:800;" id="tenderIdText">TND-8901</span>
+        <h3 id="tenderTitleText" style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.25rem;line-height:1.25;margin:4px 0 6px;">Smart Street Lighting System</h3>
+        <span class="status-pill open" id="tenderStatusText">Open</span>
+      </div>
+
+      <div style="margin-top:14px;">
+        <h4 style="font-size:0.84rem;color:var(--ns-navy);margin-bottom:4px;">Tender Specifications:</h4>
+        <p id="tenderDescText" style="font-size:0.86rem;color:var(--ns-text-muted);line-height:1.45;">Supply and cloud connectivity integration for 2,400 smart LED lighting poles.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#f8fafc;padding:16px;border-radius:12px;margin-top:14px;">
+        <div>
+          <strong style="display:block;font-size:0.74rem;color:var(--ns-text-light);">DEPARTMENT:</strong>
+          <span style="font-weight:700;color:var(--ns-navy);" id="tenderDeptText">Municipal Corporation</span>
+        </div>
+        <div>
+          <strong style="display:block;font-size:0.74rem;color:var(--ns-text-light);">LOCATION:</strong>
+          <span style="font-weight:700;color:var(--ns-navy);" id="tenderLocText">Vadodara</span>
+        </div>
+        <div>
+          <strong style="display:block;font-size:0.74rem;color:var(--ns-text-light);">SUBMISSION DEADLINE:</strong>
+          <span style="font-weight:700;color:#ea580c;" id="tenderDateText">10 Oct 2026</span>
+        </div>
+        <div>
+          <strong style="display:block;font-size:0.74rem;color:var(--ns-text-light);">BUDGET ESTIMATE:</strong>
+          <span style="font-weight:700;color:#16a34a;" id="tenderBudgetText">₹ 28,00,000</span>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn-explore-primary" style="background:#f1f5f9;color:var(--ns-navy);box-shadow:none;" onclick="closeModal('tenderDetailModal')">Close</button>
+        <button type="button" class="btn-explore-primary" onclick="submitTenderBid()"><i class="fas fa-paper-plane"></i> Submit Technical Proposal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EXPLORE OPPORTUNITIES MODAL ===== -->
+  <div class="modal-overlay" id="exploreModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('exploreModal')"><i class="fas fa-times"></i></button>
+      <h3 style="font-family:'Poppins',sans-serif;color:var(--ns-navy);font-size:1.2rem;margin-bottom:8px;">Request Cross-Sector Collaboration</h3>
+      <p style="font-size:0.84rem;color:var(--ns-text-muted);margin-bottom:16px;">Initiate a joint project with state municipal corporations or accredited university incubation cells.</p>
+      
+      <form onsubmit="sendCollabRequest(event)">
+        <div style="margin-bottom:12px;">
+          <label style="font-weight:700;font-size:0.8rem;color:var(--ns-navy);display:block;margin-bottom:4px;">Partner Target</label>
+          <select class="input-field" id="collabTarget">
+            <option>Parul University – Incubation Cell</option>
+            <option>MSU Baroda – Engineering Faculty</option>
+            <option>Vadodara Municipal Corporation</option>
+            <option>Gujarat State Disaster Management Authority</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-weight:700;font-size:0.8rem;color:var(--ns-navy);display:block;margin-bottom:4px;">Collaboration Domain</label>
+          <select class="input-field" id="collabDomain">
+            <option>AI & Smart City Surveillance</option>
+            <option>IoT Water Leakage & Quality Sensors</option>
+            <option>Clean Solar Cold Storage</option>
+            <option>Automated Waste Clearance</option>
+          </select>
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="font-weight:700;font-size:0.8rem;color:var(--ns-navy);display:block;margin-bottom:4px;">Project Proposal & CSR Grant (₹)</label>
+          <input type="text" class="input-field" placeholder="e.g. ₹ 5,00,000 grant + cloud platform access" required />
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" class="btn-explore-primary" style="background:#f1f5f9;color:var(--ns-navy);box-shadow:none;" onclick="closeModal('exploreModal')">Cancel</button>
+          <button type="submit" class="btn-explore-primary"><i class="fas fa-handshake"></i> Dispatch Proposal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- ===== INDUSTRY PORTAL JAVASCRIPT LOGIC ===== -->
+  <script>
+    let miniCollabMap = null;
+    let fullCollabMap = null;
+    let activeTenderItem = null;
+
+    // Tenders dataset matching the screenshot
+    const tendersData = [
+      { id: 'TND-101', title: 'Smart Street Lighting System', dept: 'Municipal Corporation', location: 'Vadodara', lastDate: '10 Oct 2026', status: 'Open', budget: '₹ 28,00,000', desc: 'Centralized smart illumination with motion sensor dimming.' },
+      { id: 'TND-102', title: 'City Surveillance Infrastructure', dept: 'Home Department', location: 'Gujarat', lastDate: '15 Oct 2026', status: 'Live', budget: '₹ 45,00,000', desc: 'AI-assisted optical surveillance at key interstate check-posts.' },
+      { id: 'TND-103', title: 'Waste Management Solution', dept: 'Urban Development', location: 'Vadodara', lastDate: '22 Oct 2026', status: 'Closing Soon', budget: '₹ 18,50,000', desc: 'RFID bin monitoring and dynamic vehicle dispatch software.' },
+      { id: 'TND-104', title: 'IoT Based Water Monitoring', dept: 'Water Supply Dept.', location: 'Gujarat', lastDate: '28 Oct 2026', status: 'Open', budget: '₹ 22,00,000', desc: 'Real-time telemetry sensors for pipeline turbidity and pressure.' },
+      { id: 'TND-105', title: 'Smart Campus Infrastructure', dept: 'Education Department', location: 'Gujarat', lastDate: '05 Nov 2026', status: 'Upcoming', budget: '₹ 15,00,000', desc: 'Campus gigabit backbone and energy automation.' }
+    ];
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    // Modal Helpers
+    function openModal(id) { document.getElementById(id)?.classList.add('show'); }
+    function closeModal(id) { document.getElementById(id)?.classList.remove('show'); }
+    function openExploreModal() { openModal('exploreModal'); }
+
+    // Mobile Sidebar
+    function toggleSidebarMobile() {
+      document.getElementById('appSidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('open');
+    }
+    function closeSidebarMobile() {
+      document.getElementById('appSidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+
+    // Profile Dropdown
+    function toggleProfileDropdown() {
+      document.getElementById('profileDropdown')?.classList.toggle('show');
+    }
+    document.addEventListener('click', (e) => {
+      const btn = document.getElementById('userProfileBtn');
+      const dd = document.getElementById('profileDropdown');
+      if (btn && dd && !btn.contains(e.target)) dd.classList.remove('show');
+    });
+
+    function industryLogout() {
+      localStorage.removeItem('nagriksnap_user');
+      window.location.href = 'login.html?role=industry';
+    }
+
+    function clearIndustryNotifs() {
+      document.getElementById('bellNotifDot').style.display = 'none';
+      document.getElementById('sidebarBadgeCount').style.display = 'none';
+      alert('All notifications marked as read.');
+    }
+
+    function saveCompanyProfile(e) {
+      e.preventDefault();
+      alert('✅ Company and CSR details saved successfully!');
+    }
+
+    // SPA View Switching
+    function switchIndustryView(viewKey) {
+      closeSidebarMobile();
+      document.querySelectorAll('.sidebar-menu .nav-item').forEach(i => i.classList.remove('active'));
+      document.getElementById('nav-' + viewKey)?.classList.add('active');
+
+      document.querySelectorAll('.spa-view').forEach(v => v.classList.remove('active'));
+      const target = document.getElementById('view-' + viewKey);
+      if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      if (viewKey === 'map-view') {
+        setTimeout(initFullCollabMap, 100);
+      }
+    }
+
+    // Render Tenders Tables
+    function renderTendersTables(query = '') {
+      let filtered = tendersData;
+      if (query) {
+        filtered = filtered.filter(t => 
+          t.title.toLowerCase().includes(query) ||
+          t.dept.toLowerCase().includes(query) ||
+          t.location.toLowerCase().includes(query) ||
+          t.status.toLowerCase().includes(query)
+        );
+      }
+
+      const recentTbody = document.getElementById('industryRecentTendersTbody');
+      const allTbody = document.getElementById('industryAllTendersTbody');
+
+      const makeRows = (items, showBudget = false) => {
+        if (items.length === 0) {
+          return '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--ns-text-muted);">No matching tenders found.</td></tr>';
+        }
+        return items.map((item, idx) => `
+          <tr onclick="openTenderDetail('${item.id}')">
+            <td>${idx + 1}</td>
+            <td><strong>${escapeHtml(item.title)}</strong></td>
+            <td>${escapeHtml(item.dept)}</td>
+            <td>${escapeHtml(item.location)}</td>
+            <td>${escapeHtml(item.lastDate)}</td>
+            ${showBudget ? `<td><span style="font-weight:700;color:#16a34a;">${item.budget}</span></td>` : ''}
+            <td><span class="status-pill ${getTenderPillClass(item.status)}">${escapeHtml(item.status)}</span></td>
+            <td><button type="button" class="link-btn">View</button></td>
+          </tr>
+        `).join('');
+      };
+
+      if (recentTbody) recentTbody.innerHTML = makeRows(filtered.slice(0, 5), false);
+      if (allTbody) allTbody.innerHTML = makeRows(filtered, true);
+    }
+
+    function getTenderPillClass(status) {
+      switch ((status || '').toLowerCase()) {
+        case 'open': return 'open';
+        case 'live': return 'live';
+        case 'closing soon': return 'closing-soon';
+        case 'upcoming': return 'upcoming';
+        default: return 'open';
+      }
+    }
+
+    function handleIndustrySearch(q) {
+      renderTendersTables((q || '').toLowerCase().trim());
+    }
+
+    // Tender Detail Modal
+    function openTenderDetail(id) {
+      const item = tendersData.find(t => t.id === id);
+      if (!item) return;
+      activeTenderItem = item;
+
+      document.getElementById('tenderIdText').textContent = item.id;
+      document.getElementById('tenderTitleText').textContent = item.title;
+      document.getElementById('tenderDeptText').textContent = item.dept;
+      document.getElementById('tenderLocText').textContent = item.location;
+      document.getElementById('tenderDateText').textContent = item.lastDate;
+      document.getElementById('tenderBudgetText').textContent = item.budget;
+      document.getElementById('tenderDescText').textContent = item.desc;
+
+      const pill = document.getElementById('tenderStatusText');
+      pill.textContent = item.status;
+      pill.className = `status-pill ${getTenderPillClass(item.status)}`;
+
+      openModal('tenderDetailModal');
+    }
+
+    function submitTenderBid() {
+      if (!activeTenderItem) return;
+      alert(`✅ Technical Bid for ${activeTenderItem.title} submitted to ${activeTenderItem.dept} successfully! Acknowledgement ID: BID-${Math.floor(10000 + Math.random() * 90000)}.`);
+      closeModal('tenderDetailModal');
+    }
+
+    function openCollabDetail(from, type, purpose) {
+      alert(`🤝 Collaboration Dossier:\nFrom: ${from}\nType: ${type}\nPurpose: ${purpose}\n\nStatus: Pending Final Memorandum of Understanding (MoU).`);
+    }
+
+    function openCsrDetail(title, status, desc) {
+      alert(`🌱 CSR Initiative Details:\n${title}\nStatus: ${status}\nDescription: ${desc}`);
+    }
+
+    function sendCollabRequest(e) {
+      e.preventDefault();
+      const target = document.getElementById('collabTarget').value;
+      const domain = document.getElementById('collabDomain').value;
+      alert(`✅ Collaboration proposal for "${domain}" dispatched to ${target}!`);
+      closeModal('exploreModal');
+    }
+
+    // Leaflet Collaboration Map
+    function initIndustryCollabMap() {
+      try {
+        if (!miniCollabMap) {
+          miniCollabMap = L.map('industryCollabMap', { zoomControl: false }).setView([22.2980, 73.2350], 12);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(miniCollabMap);
+
+          // Points matching screenshot: Gujarat Govt, Parul Univ, MSU, Industrial Area, IT Hub
+          const pins = [
+            { lat: 22.3150, lng: 73.1800, title: 'Gujarat Government', type: 'Govt Project', color: '#0ea5e9' },
+            { lat: 22.2887, lng: 73.3634, title: 'Parul University', type: 'Univ Collaboration', color: '#16a34a' },
+            { lat: 22.3120, lng: 73.1920, title: 'MSU Baroda', type: 'Univ Collaboration', color: '#16a34a' },
+            { lat: 22.2450, lng: 73.1850, title: 'Industrial Area', type: 'CSR Initiatives', color: '#ea580c' },
+            { lat: 22.2800, lng: 73.2600, title: 'IT Hub', type: 'Innovation Hub', color: '#8b5cf6' }
+          ];
+
+          pins.forEach(p => {
+            const icon = L.divIcon({
+              className: 'custom-map-pin',
+              html: `<div style="background:${p.color};color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;font-size:11px;"><i class="fas fa-map-marker-alt"></i></div>`,
+              iconSize: [28, 28],
+              iconAnchor: [14, 14]
+            });
+            L.marker([p.lat, p.lng], { icon }).addTo(miniCollabMap)
+              .bindPopup(`<strong>${p.title}</strong><br><span style="color:${p.color};font-weight:700;">${p.type}</span>`);
+          });
+        }
+      } catch (_) {}
+    }
+
+    function initFullCollabMap() {
+      try {
+        if (!fullCollabMap) {
+          fullCollabMap = L.map('industryFullGeoMap').setView([22.2980, 73.2350], 12);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(fullCollabMap);
+
+          const pins = [
+            { lat: 22.3150, lng: 73.1800, title: 'Gujarat Government', type: 'Govt Project' },
+            { lat: 22.2887, lng: 73.3634, title: 'Parul University', type: 'Univ Collaboration' },
+            { lat: 22.3120, lng: 73.1920, title: 'MSU Baroda', type: 'Univ Collaboration' },
+            { lat: 22.2450, lng: 73.1850, title: 'Industrial Area', type: 'CSR Initiatives' },
+            { lat: 22.2800, lng: 73.2600, title: 'IT Hub', type: 'Innovation Hub' }
+          ];
+
+          pins.forEach(p => {
+            L.marker([p.lat, p.lng]).addTo(fullCollabMap)
+              .bindPopup(`<strong>${p.title}</strong><br>${p.type}`);
+          });
+        } else {
+          fullCollabMap.invalidateSize();
+        }
+      } catch (_) {}
+    }
+
+    // Initialize on DOM Ready
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem('nagriksnap_user') || '{}');
+        if (stored.name) {
+          document.getElementById('welcomeTitle').textContent = `Welcome, ${stored.name} 🏭`;
+          document.getElementById('headerUserName').textContent = stored.name;
+          const initials = stored.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AV';
+          document.getElementById('headerAvatar').textContent = initials;
+        }
+        if (stored.organization) {
+          document.getElementById('sideCompanyName').textContent = stored.organization;
+        }
+      } catch (_) {}
+
+      renderTendersTables();
+      initIndustryCollabMap();
+    });
+  </script>
+</body>
+</html>
