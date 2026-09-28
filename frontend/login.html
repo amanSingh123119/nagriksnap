@@ -425,6 +425,19 @@
 
         <!-- ========== LOGIN ========== -->
         <div class="form-panel active" id="panelLogin">
+          <!-- Demo credentials badge & 1-click Auto-fill -->
+          <div id="demoHelperBox" style="margin: 4px 0 14px; padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; color: #166534;">
+            <div style="line-height: 1.4;">
+              <span style="display:inline-flex;align-items:center;gap:4px;"><i class="fas fa-key" style="color: #16a34a;"></i> <strong>Demo Credentials:</strong></span>
+              <div style="font-size: 0.77rem; color: #15803d; margin-top: 2px;">
+                User: <code id="demoCredUser" style="background:#dcfce7;padding:1px 4px;border-radius:4px;font-weight:600;">demo.government@example.test</code> | Pass: <code style="background:#dcfce7;padding:1px 4px;border-radius:4px;font-weight:600;">Password123!</code>
+              </div>
+            </div>
+            <button type="button" onclick="autoFillCredentials()" style="background: #16a34a; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.76rem; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(22,163,74,0.25); white-space: nowrap;">
+              <i class="fas fa-magic"></i> Auto-Fill
+            </button>
+          </div>
+
           <form onsubmit="doLogin(event)">
             <div class="form-group">
               <label>Email, Phone, or Username</label>
@@ -446,7 +459,7 @@
                Login <i class="fas fa-arrow-right-to-bracket"></i>
             </button>
           </form>
-          <button type="button" class="btn-login-main" id="demoLoginButton" onclick="doDemoLogin()" style="display:none;margin-top:12px;background:white;color:var(--ns-ink);border:1px solid var(--ns-line);">
+          <button type="button" class="btn-login-main" id="demoLoginButton" onclick="doDemoLogin()" style="margin-top:12px;background:white;color:var(--ns-ink);border:1px solid var(--ns-line);">
             <i class="fas fa-bolt" style="color:var(--ns-blue)"></i> One-click demo sign-in
           </button>
           
@@ -727,6 +740,27 @@
 
     const roleLabels = {citizen:'Citizen', govt_admin:'Government', university:'University', industry:'Industry', admin:'Nodal Admin', super_admin:'Super Admin'};
     const roleTabs = {citizen:'tabCitizen', govt_admin:'tabGovernment', university:'tabUniversity', industry:'tabIndustry', admin:'tabAdmin', super_admin:'tabSuperAdmin'};
+    
+    const demoCredentials = {
+      govt_admin: { user: 'demo.government@example.test', pass: 'Password123!' },
+      industry: { user: 'demo.industry@example.test', pass: 'Password123!' },
+      university: { user: 'demo.university@example.test', pass: 'Password123!' },
+      admin: { user: 'demo.admin@example.test', pass: 'Password123!' },
+      super_admin: { user: 'demo.admin@example.test', pass: 'Password123!' },
+      citizen: { user: 'demo.citizen@example.test', pass: 'Password123!' }
+    };
+
+    function autoFillCredentials() {
+      const cred = demoCredentials[currentRole] || demoCredentials.citizen;
+      const userField = document.getElementById('loginName');
+      const passField = document.getElementById('loginPass');
+      if (userField && passField) {
+        userField.value = cred.user;
+        passField.value = cred.pass;
+      }
+      clearMsgs();
+    }
+
     const requestedRole = new URLSearchParams(window.location.search).get('role');
     if (requestedRole && Object.prototype.hasOwnProperty.call(roleLabels, requestedRole)) setRole(requestedRole);
     const requestedMode = new URLSearchParams(window.location.search).get('mode');
@@ -752,12 +786,18 @@
       document.getElementById('modePills').style.display = citizenRole ? 'flex' : 'none';
       const swipeHint = document.querySelector('.swipe-hint');
       if (swipeHint) swipeHint.style.display = citizenRole ? 'block' : 'none';
+      
+      const credUserEl = document.getElementById('demoCredUser');
+      if (credUserEl && demoCredentials[role]) {
+        credUserEl.textContent = demoCredentials[role].user;
+      }
+
       const demoLoginButton = document.getElementById('demoLoginButton');
       if (demoLoginButton) {
-        const isLocalDevelopment = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
-        demoLoginButton.style.display = isLocalDevelopment ? 'inline-flex' : 'none';
-        demoLoginButton.innerHTML = '<i class="fas fa-bolt"></i> Sign in to demo ' + roleLabels[role] + ' workspace';
+        demoLoginButton.style.display = 'inline-flex';
+        demoLoginButton.innerHTML = '<i class="fas fa-bolt" style="color:var(--ns-blue);margin-right:6px;"></i> One-click demo sign-in (' + roleLabels[role] + ')';
       }
+      autoFillCredentials();
       if (role !== 'citizen' && currentMode === 'signup') setMode('login');
       clearMsgs();
     }
