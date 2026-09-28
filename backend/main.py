@@ -680,28 +680,22 @@ class DemoLoginRequest(BaseModel):
 
 @app.post("/auth/demo-login")
 def demo_login(data: DemoLoginRequest):
-    allow_demo = (APP_ENV == "development") or (os.getenv("ALLOW_DEMO_SIGNIN", "true").lower() in {"true", "1", "yes"})
-    if not allow_demo:
+    if APP_ENV != "development":
         raise HTTPException(status_code=404, detail="Demo sign-in is available only in development.")
 
-    demo_email_candidates = {
-        "citizen": ["demo.citizen@example.test", "aman.2710.singh.1947@gmail.com"],
-        "govt_admin": ["demo.government@example.test", "demo.govt@example.test"],
-        "university": ["demo.university@example.test"],
-        "industry": ["demo.industry@example.test"],
-        "admin": ["demo.admin@example.test"],
-        "super_admin": ["demo.admin@example.test"],
+    demo_emails = {
+        "citizen": "demo.citizen@example.test",
+        "govt_admin": "demo.govt@example.test",
+        "university": "demo.university@example.test",
+        "industry": "demo.industry@example.test",
+        "admin": "demo.admin@example.test",
     }
-    candidates = demo_email_candidates.get(data.role, [])
-    user = None
-    for email in candidates:
-        candidate_user = db.get_user_by_email(email)
-        if candidate_user and (candidate_user.get("role") == data.role or (data.role == "super_admin" and candidate_user.get("role") == "admin")):
-            user = candidate_user
-            break
-
-    if not user:
-        raise HTTPException(status_code=404, detail=f"This role's demo account is not provisioned.")
+    email = demo_emails.get(data.role)
+    user = db.get_user_by_email(email) if email else None
+    if (not user or user.get("role") != data.role) and data.role == "govt_admin":
+        user = db.get_user_by_email("demo.government@example.test") or db.get_user_by_username("government")
+    if not user or user.get("role") != data.role:
+        raise HTTPException(status_code=404, detail="This role's demo account is not provisioned in the local database.")
 
     token = create_token(user.get("name") or user["email"], user["role"], user.get("id"))
     return {

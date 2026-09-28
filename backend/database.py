@@ -649,6 +649,53 @@ def _seed_sih_demo_data():
             conn.close()
 
 
+def _seed_demo_users():
+    """Ensure standard demo users for all roles exist with Password123!"""
+    try:
+        from argon2 import PasswordHasher
+        pwd_hash = PasswordHasher().hash("Password123!")
+    except Exception:
+        pwd_hash = "salt123:" + hashlib.sha256(("salt123" + "Password123!").encode()).hexdigest()
+    
+    now = datetime.now().isoformat()
+    demo_accounts = [
+        # Government
+        ("U-GOVT-001", "Rakesh Sharma (Nodal Officer)", "government", "9876540001", "demo.government@example.test", pwd_hash, "govt_admin", "Municipal Corporation", "Public Works / Roads"),
+        ("U-GOVT-002", "Rakesh Sharma", "govt", "9876540002", "demo.govt@example.test", pwd_hash, "govt_admin", "Municipal Corporation", "Public Works / Roads"),
+        # Industry
+        ("U-IND-001", "Amit Verma (CSR Director)", "industry", "9876540003", "demo.industry@example.test", pwd_hash, "industry", "TechNova Solutions Ltd.", "CSR Foundation"),
+        # University
+        ("U-UNIV-001", "Prof. Rajesh Iyer (Research Dean)", "university", "9876540004", "demo.university@example.test", pwd_hash, "university", "Apex Engineering Institute", "Computer Science & Engineering"),
+        # Admin
+        ("U-ADM-001", "Central Platform Administrator", "admin", "9876540005", "demo.admin@example.test", pwd_hash, "admin", "Smart City Innovation Mission", "System Operations"),
+        # Citizen
+        ("U-CIT-001", "Demo Citizen", "citizen", "9876540006", "demo.citizen@example.test", pwd_hash, "citizen", "", ""),
+        ("U-CIT-002", "Aman Singh", "aman_singh89", "9876540007", "aman.2710.singh.1947@gmail.com", pwd_hash, "citizen", "", ""),
+    ]
+    with _lock:
+        conn = _connect()
+        try:
+            for acc in demo_accounts:
+                uid, name, uname, phone, email, phash, role, org, dept = acc
+                row = conn.execute("SELECT id FROM users WHERE lower(email)=lower(?) OR lower(username)=lower(?) LIMIT 1", (email, uname)).fetchone()
+                if row:
+                    conn.execute(
+                        "UPDATE users SET name=?, username=?, email=?, password_hash=?, role=?, organization=?, department=?, updated_at=? WHERE id=?",
+                        (name, uname, email, phash, role, org, dept, now, row["id"])
+                    )
+                else:
+                    conn.execute(
+                        """INSERT INTO users (id, name, username, phone, email, password_hash, role, organization, department, address, lat, lng, created_at, updated_at, last_login)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'National Capital Region', 28.6139, 77.2090, ?, ?, ?)""",
+                        (uid, name, uname, phone, email, phash, role, org, dept, now, now, now)
+                    )
+            conn.commit()
+        except Exception as e:
+            print(f"[Seed Users Notice] {e}")
+        finally:
+            conn.close()
+
+
 # ===================== USERS & AUTH =====================
 def get_users():
     with _lock:
