@@ -34,11 +34,12 @@ def create_provisioned_user(*, name, email, phone, role, password, organization=
     if role in {"university", "industry"} and not organization:
         raise ValueError("Organization is required for university and industry accounts.")
 
-    existing_users = db.get_users()
-    if db.get_user_by_email(email):
+    existing = db.get_user_by_email(email)
+    if existing:
+        if existing.get("role") == role:
+            db.update_user_password(existing["id"], hash_password(password))
+            return db.get_user_by_id(existing["id"])
         raise ValueError("An account with this email already exists.")
-    if any(str(user.get("phone", "")) == phone for user in existing_users):
-        raise ValueError("An account with this phone number already exists.")
 
     username_base = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_") or "user"
     username = f"{username_base}_{secrets.token_hex(3)}"

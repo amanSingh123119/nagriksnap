@@ -476,6 +476,7 @@ def init_db():
             conn.close()
 
     _seed_sih_demo_data()
+    _seed_demo_users()
 
 
 def _seed_sih_demo_data():
